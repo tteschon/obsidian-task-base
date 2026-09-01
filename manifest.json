@@ -1,0 +1,9 @@
+{
+	"id": "home-tasks",
+	"name": "Home Tasks",
+	"version": "0.1.0",
+	"minAppVersion": "1.9.0",
+	"description": "Create and manage note-per-task records with RRULE recurrence, backed by a Bases task base.",
+	"author": "tteschon",
+	"isDesktopOnly": false
+}

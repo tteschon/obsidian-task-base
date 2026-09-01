@@ -1,0 +1,11 @@
+node_modules/
+main.js
+*.js.map
+.DS_Store
+data.json
+
+# Machine-local Claude Code permissions, not shared
+.claude/settings.local.json
+
+# Per-machine dev build destination
+.vault-plugin-dir
