@@ -2,6 +2,7 @@ import { type App, type TFile } from "obsidian";
 import { type Task, readTask } from "./task";
 import { type ISODate, addDays, parseISO, toISO, todayISO } from "../dates";
 import { frequencyState, isRecurring } from "../recurrence";
+import { isInExcludedFolder } from "../settingsData";
 
 /**
  * Finding tasks.
@@ -31,13 +32,11 @@ export interface Buckets {
 export class TaskRepository {
 	constructor(
 		private app: App,
-		private getTemplateFolder: () => string,
+		private getExcludedFolders: () => string[],
 	) {}
 
 	private isExcluded(file: TFile): boolean {
-		const folder = this.getTemplateFolder().replace(/\/+$/, "");
-		if (!folder) return false;
-		return file.path === `${folder}` || file.path.startsWith(`${folder}/`);
+		return isInExcludedFolder(file.path, this.getExcludedFolders());
 	}
 
 	/** Every note carrying `type: task`, minus the template folder. */

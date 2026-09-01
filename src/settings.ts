@@ -2,33 +2,11 @@ import { type App, PluginSettingTab, Setting } from "obsidian";
 import type HomeTasksPlugin from "./main";
 import { PRIORITIES, type Priority } from "./model/task";
 
-export interface HomeTasksSettings {
-	/** Where new task notes are created. */
-	taskFolder: string;
-	/** Excluded from the task list, mirroring the base's !file.inFolder clause. */
-	templateFolder: string;
-	/** Daily-note folder, for the `created` backlink. */
-	dailyNoteFolder: string;
-	/** Offered in the create modal alongside anything already in the vault. */
-	categories: string[];
-	defaultPriority: Priority;
-	/** Heading the completion log is appended under. */
-	logHeading: string;
-	/** The task base, opened by a button in the task pane. Empty hides it. */
-	basePath: string;
-	openViewOnStart: boolean;
-}
-
-export const DEFAULT_SETTINGS: HomeTasksSettings = {
-	taskFolder: "tasks",
-	templateFolder: "Templates",
-	dailyNoteFolder: "📝 Daily Notes",
-	categories: ["home", "yard", "errands", "vehicle", "health"],
-	defaultPriority: "low",
-	logHeading: "Service log",
-	basePath: "tasks/task base.base",
-	openViewOnStart: false,
-};
+export {
+	DEFAULT_SETTINGS,
+	migrateSettings,
+	type HomeTasksSettings,
+} from "./settingsData";
 
 export class HomeTasksSettingTab extends PluginSettingTab {
 	constructor(
@@ -56,30 +34,21 @@ export class HomeTasksSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Template folder")
+			.setName("Excluded folders")
 			.setDesc(
-				"Excluded from the task list. Must match the !file.inFolder clause in your task base, or the two will disagree.",
+				"Comma-separated. Notes in these folders are ignored even when they carry type: task — a task template, or Kanban cards on their own schema. Must match the !file.inFolder clauses in your task base, or the pane and the base will disagree.",
 			)
 			.addText((t) =>
 				t
 					.setPlaceholder("Templates")
-					.setValue(this.plugin.settings.templateFolder)
+					.setValue(this.plugin.settings.excludedFolders.join(", "))
 					.onChange(async (v) => {
-						this.plugin.settings.templateFolder = v.trim();
+						this.plugin.settings.excludedFolders = v
+							.split(",")
+							.map((f) => f.trim())
+							.filter(Boolean);
 						await this.plugin.saveSettings();
 						this.plugin.refreshViews();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Daily note folder")
-			.setDesc("Used for the created backlink on a new task.")
-			.addText((t) =>
-				t
-					.setValue(this.plugin.settings.dailyNoteFolder)
-					.onChange(async (v) => {
-						this.plugin.settings.dailyNoteFolder = v.trim();
-						await this.plugin.saveSettings();
 					}),
 			);
 

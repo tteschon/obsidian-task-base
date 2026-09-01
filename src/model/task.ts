@@ -1,13 +1,16 @@
 import { type App, type TFile, normalizePath } from "obsidian";
 import { type ISODate, parseISO, todayISO } from "../dates";
 import {
+	PRIORITIES,
+	type Priority,
 	appendLogLine,
 	normalizeEmptyKeysIn,
 	renderTaskNote,
 	sanitizeFileName,
 } from "./frontmatter";
 
-export { sanitizeFileName } from "./frontmatter";
+export { PRIORITIES, sanitizeFileName } from "./frontmatter";
+export type { Priority } from "./frontmatter";
 
 /**
  * The task note contract.
@@ -17,9 +20,6 @@ export { sanitizeFileName } from "./frontmatter";
  * vault. Every frontmatter write in this plugin goes through this module, so
  * the rules below are stated once and enforced once.
  */
-
-export type Priority = "low" | "medium" | "high";
-export const PRIORITIES: Priority[] = ["low", "medium", "high"];
 
 /** Frontmatter keys, in the order the vault's task template writes them. */
 export const FIELD_ORDER = [

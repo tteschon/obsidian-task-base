@@ -126,12 +126,48 @@ type == "task"   and   !file.inFolder("Templates")
 ```
 
 **If the `.base` file's filters change, that file must change with them**, or
-the sidebar and the base will quietly disagree. The template folder is a
+the sidebar and the base will quietly disagree. **Excluded folders** is a
 setting for exactly this reason.
 
 `src/model/assetRepository.ts` is the same shape for assets, and matches on
 `type: asset` rather than mirroring `inventory.base`'s folder filter — see
 **Assets** above for why.
+
+## Installing in another vault
+
+The plugin is three files — `main.js`, `manifest.json`, `styles.css` — in
+`<vault>/.obsidian/plugins/home-tasks/`. Pick one route:
+
+| | |
+|---|---|
+| **Symlink** | `ln -s /path/to/repo <vault>/.obsidian/plugins/home-tasks` after `npm run build`. One build serves every vault, and `git pull` keeps them current. |
+| **Copy** | Copy the three built files in. Each vault can run a different version; you update each by hand. |
+| **Clone and build** | For another machine: clone, `npm install`, `npm run build`, then symlink or copy. |
+
+Then enable **Home Tasks** under Settings → Community plugins.
+
+### A new vault needs configuring, not just the files
+
+The plugin finds tasks by `type: task` **anywhere in the vault**, so the
+defaults — which describe one particular vault — are usually wrong somewhere
+else. Three settings matter:
+
+- **New task folder** — where new notes land. Created if missing.
+- **Excluded folders** — any folder whose notes carry `type: task` for an
+  unrelated reason. This is the one that bites: a vault with Kanban cards or
+  another `type: task` convention will otherwise list them in the pane's count
+  and offer them in the **Complete task** picker, where choosing one writes
+  `done: true` and `last done` into a note that was never a task.
+- **Task base** — clear it, or point it at that vault's base. When the path
+  does not resolve, the pane's "Open task base" button is simply hidden.
+
+**No `.base` file is required.** The pane reads the metadata cache directly, so
+every command and every section works in a vault with no base at all. The base
+only adds Obsidian's own table view and the button that opens it.
+
+Property types need no setup either: Obsidian infers `done` as a checkbox and
+`due` / `last done` as dates from the values the plugin writes. The plugin never
+touches `.obsidian/types.json`.
 
 ## Layout
 
@@ -147,6 +183,7 @@ src/
   model/task.ts              the field contract, read + write
   model/taskRepository.ts    find and bucket tasks
   model/assetRepository.ts   find asset notes
+  settingsData.ts            pure: settings shape, defaults, migration
   ui/                        modals and the sidebar view
 test/                        node:test suites over the pure modules
 ```

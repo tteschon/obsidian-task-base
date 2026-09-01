@@ -8,6 +8,9 @@ import type { ISODate } from "../dates";
  * strays out of the frontmatter would quietly rewrite someone's note body.
  */
 
+export type Priority = "low" | "medium" | "high";
+export const PRIORITIES: Priority[] = ["low", "medium", "high"];
+
 /** Characters Obsidian will not accept in a file name. */
 export function sanitizeFileName(name: string): string {
 	return name
@@ -19,7 +22,7 @@ export function sanitizeFileName(name: string): string {
 export interface TaskNoteFields {
 	due: ISODate | null;
 	created: ISODate;
-	priority: string;
+	priority: Priority;
 	category: string | null;
 	frequency: string | null;
 	asset: string | null;

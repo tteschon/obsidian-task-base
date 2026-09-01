@@ -1,9 +1,6 @@
 import { Notice, Plugin, type TFile, type WorkspaceLeaf, debounce } from "obsidian";
-import {
-	DEFAULT_SETTINGS,
-	type HomeTasksSettings,
-	HomeTasksSettingTab,
-} from "./settings";
+import { HomeTasksSettingTab } from "./settings";
+import { type HomeTasksSettings, migrateSettings } from "./settingsData";
 import { TaskRepository } from "./model/taskRepository";
 import { type Task, hasCorruptDate, readTask, writeTask } from "./model/task";
 import { isRecurring, nextDue } from "./recurrence";
@@ -21,7 +18,7 @@ export default class HomeTasksPlugin extends Plugin {
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
-		this.repository = new TaskRepository(this.app, () => this.settings.templateFolder);
+		this.repository = new TaskRepository(this.app, () => this.settings.excludedFolders);
 
 		this.registerView(TASK_VIEW_TYPE, (leaf: WorkspaceLeaf) => new TaskListView(leaf, this));
 
@@ -108,7 +105,10 @@ export default class HomeTasksPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		// migrateSettings, not Object.assign: a retired key from an older
+		// version would otherwise ride along in memory and be written back to
+		// disk on the next save.
+		this.settings = migrateSettings(await this.loadData());
 	}
 
 	async saveSettings(): Promise<void> {
