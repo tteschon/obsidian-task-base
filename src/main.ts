@@ -23,6 +23,7 @@ export default class TaskBasePlugin extends Plugin {
 
 		this.registerView(TASK_VIEW_TYPE, (leaf: WorkspaceLeaf) => new TaskListView(leaf, this));
 
+
 		this.addRibbonIcon("list-checks", "Tasks", () => void this.activateView());
 
 		this.addCommand({
@@ -129,16 +130,38 @@ export default class TaskBasePlugin extends Plugin {
 		}
 	}
 
+	/**
+	 * Show the task pane, building its view if the workspace only restored a
+	 * shell of it.
+	 *
+	 * Obsidian defers sidebar views: a leaf saved in the layout comes back with
+	 * the right state type but **no view behind it**, and `revealLeaf` alone
+	 * happily reveals that empty shell — a blank pane, no error, nothing in the
+	 * console. `setViewState` does not help either, because the state type is
+	 * already correct so there is nothing for it to change. `loadIfDeferred` is
+	 * the call that actually constructs the view.
+	 */
+	/**
+	 * Show the task pane, building its view if the workspace only restored a
+	 * shell of it.
+	 *
+	 * Obsidian defers sidebar views: a leaf saved in the layout comes back with
+	 * the right state type but no view behind it, and `revealLeaf` alone will
+	 * happily reveal that empty shell. `loadIfDeferred` is what actually
+	 * constructs and opens the view.
+	 */
 	async activateView(): Promise<void> {
 		const { workspace } = this.app;
-		const existing = workspace.getLeavesOfType(TASK_VIEW_TYPE);
-		if (existing.length) {
-			await workspace.revealLeaf(existing[0]);
-			return;
+		let leaf = workspace.getLeavesOfType(TASK_VIEW_TYPE)[0];
+
+		if (!leaf) {
+			const right = workspace.getRightLeaf(false);
+			if (!right) return;
+			leaf = right;
+			await leaf.setViewState({ type: TASK_VIEW_TYPE, active: true });
 		}
-		const leaf = workspace.getRightLeaf(false);
-		if (!leaf) return;
-		await leaf.setViewState({ type: TASK_VIEW_TYPE, active: true });
+
+		await leaf.loadIfDeferred();
 		await workspace.revealLeaf(leaf);
 	}
 

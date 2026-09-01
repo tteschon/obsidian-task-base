@@ -175,6 +175,18 @@ Property types need no setup either: Obsidian infers `done` as a checkbox and
 `due` / `last done` as dates from the values the plugin writes. The plugin never
 touches `.obsidian/types.json`.
 
+## A hazard worth knowing
+
+**Do not name a method on the view class after a Workspace lifecycle verb.**
+`View.open()` is a real method Obsidian calls to open a view, but it is absent
+from `obsidian.d.ts` — so defining `private open(task: Task)` on the view type
+checks cleanly, overrides Obsidian's own method, and the pane then renders
+blank: the view constructs, `onload` and `onOpen` never run, and **nothing is
+logged anywhere**. It is named `openNote` for that reason.
+
+`render()` catches its own failures and paints the error into the pane, so the
+next render bug reports itself rather than showing an empty panel.
+
 ## Layout
 
 ```

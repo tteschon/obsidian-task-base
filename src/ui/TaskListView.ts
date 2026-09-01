@@ -8,6 +8,7 @@ import { CompleteTaskModal } from "./CompleteTaskModal";
 
 export const TASK_VIEW_TYPE = "task-base-view";
 
+
 interface Section {
 	key: keyof Omit<Buckets, "all" | "stalled" | "invalidRule">;
 	title: string;
@@ -69,12 +70,44 @@ export class TaskListView extends ItemView {
 		return "list-checks";
 	}
 
+
 	async onOpen(): Promise<void> {
 		this.contentEl.addClass("task-base-view");
 		this.render();
 	}
 
+	/**
+	 * Draw the pane, and say so when it cannot.
+	 *
+	 * A view whose render throws leaves an empty pane and nothing else — no
+	 * message, no clue which line failed. Catching here turns a silent blank
+	 * pane into a readable one.
+	 */
 	render(): void {
+		try {
+			this.draw();
+		} catch (error) {
+			this.reportFailure(error);
+		}
+	}
+
+	private reportFailure(error: unknown): void {
+		const detail =
+			error instanceof Error ? `${error.message}\n\n${error.stack ?? ""}` : String(error);
+		console.error("[Task Base] the task pane failed to render", error);
+		try {
+			this.contentEl.empty();
+			const box = this.contentEl.createDiv({ cls: "task-base-warning" });
+			box.createDiv({ text: "Task Base could not draw this pane." });
+			box.createEl("pre", { cls: "task-base-error", text: detail });
+		} catch {
+			// The DOM itself is what failed; the console line above is all there is.
+		}
+	}
+
+	private draw(): void {
+		// TEMPORARY diagnostic: proves whether the view is constructed and drawn
+		// at all, which a blank pane cannot distinguish from a silent failure.
 		const today = todayISO();
 		const buckets = this.plugin.repository.buckets(today);
 		const el = this.contentEl;
@@ -109,7 +142,7 @@ export class TaskListView extends ItemView {
 					cls: "task-base-name",
 					text: `${task.name} — ${task.frequency}`,
 				});
-				line.addEventListener("click", () => this.open(task));
+				line.addEventListener("click", () => this.openNote(task));
 			}
 		}
 
@@ -224,7 +257,7 @@ export class TaskListView extends ItemView {
 
 		const main = row.createDiv();
 		const name = main.createEl("button", { cls: "task-base-name", text: task.name });
-		name.addEventListener("click", () => this.open(task));
+		name.addEventListener("click", () => this.openNote(task));
 
 		const meta = main.createDiv({ cls: "task-base-meta" });
 		if (task.category) meta.createSpan({ cls: "task-base-chip", text: task.category });
@@ -246,7 +279,16 @@ export class TaskListView extends ItemView {
 		if (freq) meta.createSpan({ cls: "task-base-chip", text: freq });
 	}
 
-	private open(task: Task): void {
+	/**
+	 * Open a task's note.
+	 *
+	 * **Not named `open`.** `View.open()` is a real method Obsidian calls to
+	 * open the view, but it is absent from `obsidian.d.ts`, so overriding it
+	 * compiles cleanly and then swallows the view whole: the view constructs,
+	 * `onload` and `onOpen` never run, and the pane renders blank with no
+	 * error anywhere. Avoid bare lifecycle-sounding names on a View subclass.
+	 */
+	private openNote(task: Task): void {
 		void this.app.workspace.getLeaf(false).openFile(task.file);
 	}
 
@@ -268,7 +310,7 @@ export class TaskListView extends ItemView {
 			i
 				.setTitle("Open note")
 				.setIcon("file-text")
-				.onClick(() => this.open(task)),
+				.onClick(() => this.openNote(task)),
 		);
 		menu.showAtMouseEvent(event);
 	}
