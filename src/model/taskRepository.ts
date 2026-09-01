@@ -22,6 +22,8 @@ export interface Buckets {
 	today: Task[];
 	thisWeek: Task[];
 	needsAttention: Task[];
+	/** Every other open task — see `buckets`. */
+	later: Task[];
 	/** Recurring tasks left at `done: true` — they have stopped recurring. */
 	stalled: Task[];
 	/** Tasks whose `frequency` is set but unreadable. */
@@ -55,8 +57,8 @@ export class TaskRepository {
 		return readTask(this.app, file);
 	}
 
-	/** Open tasks, ranked: overdue first, then by due date, then by priority. */
-	static rank(tasks: Task[], today: ISODate = todayISO()): Task[] {
+	/** Tasks ordered by due date, then priority, then name. */
+	static rank(tasks: Task[]): Task[] {
 		const weight: Record<string, number> = { high: 0, medium: 1, low: 2 };
 		return [...tasks].sort((a, b) => {
 			if (a.due && b.due && a.due !== b.due) return a.due < b.due ? -1 : 1;
@@ -80,6 +82,15 @@ export class TaskRepository {
 		// Recurring tasks with no due date are waiting on a first completion.
 		// They are a queue, not overdue work — the sidebar says so.
 		const needsAttention = open.filter((t) => t.due === null && isRecurring(t.frequency));
+
+		// Everything else that is open, defined as the remainder rather than as
+		// "due beyond the week". A date window would leave the same hole one
+		// step further out: a one-time task with no due date at all matches
+		// none of the filters above, since needsAttention requires a rule. As a
+		// remainder these sections partition the open set, so no open task can
+		// be missing from the pane while the footer counts it.
+		const placed = new Set([...overdue, ...dueToday, ...thisWeek, ...needsAttention]);
+		const later = open.filter((t) => !placed.has(t));
 		// A recurring task sitting at done: true has silently stopped
 		// recurring. Nothing else in the vault reports this.
 		const stalled = all.filter((t) => t.done && isRecurring(t.frequency));
@@ -88,12 +99,13 @@ export class TaskRepository {
 		const invalidRule = all.filter((t) => frequencyState(t.frequency) === "invalid");
 
 		return {
-			overdue: TaskRepository.rank(overdue, today),
-			today: TaskRepository.rank(dueToday, today),
-			thisWeek: TaskRepository.rank(thisWeek, today),
-			needsAttention: TaskRepository.rank(needsAttention, today),
-			stalled: TaskRepository.rank(stalled, today),
-			invalidRule: TaskRepository.rank(invalidRule, today),
+			overdue: TaskRepository.rank(overdue),
+			today: TaskRepository.rank(dueToday),
+			thisWeek: TaskRepository.rank(thisWeek),
+			needsAttention: TaskRepository.rank(needsAttention),
+			later: TaskRepository.rank(later),
+			stalled: TaskRepository.rank(stalled),
+			invalidRule: TaskRepository.rank(invalidRule),
 			all,
 		};
 	}

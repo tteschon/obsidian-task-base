@@ -60,6 +60,39 @@
 	margin-bottom: 1.2em;
 }
 
+.task-base-view .task-base-disclosure {
+	width: 100%;
+	background: none;
+	border: none;
+	box-shadow: none;
+	padding: 0;
+	height: auto;
+	cursor: pointer;
+	font-family: inherit;
+}
+
+.task-base-view .task-base-disclosure:hover {
+	background: none;
+	box-shadow: none;
+	color: var(--text-normal);
+}
+
+.task-base-view .task-base-disclosure:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+	border-radius: var(--radius-s);
+}
+
+.task-base-view .task-base-chevron {
+	display: flex;
+	align-items: center;
+}
+
+.task-base-view .task-base-chevron .svg-icon {
+	width: 0.9em;
+	height: 0.9em;
+}
+
 .task-base-view .task-base-section-header {
 	display: flex;
 	align-items: baseline;
@@ -99,13 +132,35 @@
 	cursor: pointer;
 }
 
+/* A button, not a div, so it is a tab stop and responds to Enter. Everything
+   below strips the button chrome so it still reads as plain text. */
 .task-base-view .task-base-name {
 	cursor: pointer;
 	line-height: 1.3;
+	display: block;
+	width: 100%;
+	text-align: left;
+	background: none;
+	border: none;
+	box-shadow: none;
+	padding: 0;
+	margin: 0;
+	font-size: inherit;
+	font-family: inherit;
+	color: inherit;
+	height: auto;
 }
 
 .task-base-view .task-base-name:hover {
 	text-decoration: underline;
+	background: none;
+	box-shadow: none;
+}
+
+.task-base-view .task-base-name:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+	border-radius: var(--radius-s);
 }
 
 .task-base-view .task-base-meta {

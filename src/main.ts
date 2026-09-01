@@ -6,6 +6,7 @@ import { type Task, hasCorruptDate, readTask, writeTask } from "./model/task";
 import { isRecurring, nextDue } from "./recurrence";
 import { todayISO } from "./dates";
 import { CreateTaskModal } from "./ui/CreateTaskModal";
+import { EditTaskModal } from "./ui/EditTaskModal";
 import { CompleteTaskModal } from "./ui/CompleteTaskModal";
 import { FrequencyModal } from "./ui/FrequencyModal";
 import { SetAssetModal } from "./ui/SetAssetModal";
@@ -34,6 +35,12 @@ export default class TaskBasePlugin extends Plugin {
 			id: "complete-task",
 			name: "Complete task",
 			callback: () => this.withTask("Complete which task?", (task) => this.completeTask(task)),
+		});
+
+		this.addCommand({
+			id: "edit-task",
+			name: "Edit task",
+			callback: () => this.withTask("Edit which task?", (task) => this.openEditTaskModal(task)),
 		});
 
 		this.addCommand({
@@ -141,6 +148,13 @@ export default class TaskBasePlugin extends Plugin {
 			this.refreshViews();
 			void this.app.workspace.getLeaf(false).openFile(file);
 		}).open();
+	}
+
+	/** Shared by the "Edit task" command and the task pane's context menu. */
+	openEditTaskModal(task: Task): void {
+		new EditTaskModal(this.app, task, this.settings, this.repository.categories(), () =>
+			this.refreshViews(),
+		).open();
 	}
 
 	private completeTask(task: Task): void {

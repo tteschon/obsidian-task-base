@@ -33,14 +33,20 @@ recurring; empty means one-time.
 |---|---|
 | Create task | Form for name, category, priority, due, repeat rule, asset |
 | Complete task | Branches on `frequency` — see below |
+| Edit task | Change due date, priority, category, repeat rule or asset |
 | Edit repeat rule | Opens the RRULE builder on a task |
 | Set asset | Attaches, changes, or clears the asset on an existing task |
 | Recompute due date from repeat rule | Rolls `due` forward from `last done` |
 | Open task list | The sidebar view |
 
 The task pane carries its own toolbar — **New task**, refresh, and a button
-that opens the task base. It sticks to the top so the primary action stays
-reachable once the list scrolls.
+that opens the base file. It sticks to the top so the primary action stays
+reachable once the list scrolls. Right-click any row for Edit / Complete / Open.
+
+Its sections — Overdue, Today, This week, Needs attention, Later — **partition
+the open set**: `Later` is defined as everything not caught by the others, not
+as a date window, so no open task can be missing from the pane while the footer
+counts it. `Later` is collapsed by default, with its count on the header.
 
 Commands act on the active note when it is a task, and offer a picker when it
 is not.
@@ -199,7 +205,8 @@ would rewrite someone's note body.
 npm install
 echo "$HOME/path/to/YourVault/.obsidian/plugins/task-base" > .vault-plugin-dir
 npm run dev     # watch build, writes straight into the vault plugin folder
-npm test        # node:test over recurrence, frontmatter and asset links
+npm test        # node:test over recurrence, frontmatter, asset links, settings
+npm run lint    # eslint
 npm run build   # typecheck + minified build to the repo root, for release
 ```
 
