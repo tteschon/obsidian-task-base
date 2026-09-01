@@ -1,5 +1,5 @@
 import { type App, Modal, Notice, Setting } from "obsidian";
-import type { HomeTasksSettings } from "../settings";
+import type { TaskBaseSettings } from "../settings";
 import { type ISODate, formatHuman, todayISO } from "../dates";
 import { type Task, appendLog, writeTask } from "../model/task";
 import { type FrequencyState, describeFrequency, frequencyState, nextDue } from "../recurrence";
@@ -26,7 +26,7 @@ export class CompleteTaskModal extends Modal {
 	constructor(
 		app: App,
 		private task: Task,
-		private settings: HomeTasksSettings,
+		private settings: TaskBaseSettings,
 		private onDone: () => void,
 	) {
 		super(app);
@@ -37,14 +37,14 @@ export class CompleteTaskModal extends Modal {
 
 	onOpen(): void {
 		const { contentEl } = this;
-		contentEl.addClass("home-tasks-modal");
+		contentEl.addClass("task-base-modal");
 		contentEl.createEl("h3", { text: `Complete "${this.task.name}"` });
 
 		// A recurring task already sitting at done: true has stopped recurring.
 		// Say so plainly; rolling it forward is the fix, and it is the user's call.
 		if (this.task.done && this.recurring) {
 			contentEl.createDiv({
-				cls: "home-tasks-warning",
+				cls: "task-base-warning",
 				text:
 					"This recurring task is currently marked done, which means it stopped recurring. " +
 					"Completing it now rolls it forward and clears the done flag.",
@@ -56,34 +56,34 @@ export class CompleteTaskModal extends Modal {
 		// so this refuses to choose and asks for the rule to be fixed.
 		if (this.state === "invalid") {
 			contentEl.createDiv({
-				cls: "home-tasks-warning",
+				cls: "task-base-warning",
 				text: `The repeat rule on this task cannot be read, so there is no safe way to complete it. Fix it with "Edit repeat rule", or clear it to make this a one-time task.`,
 			});
 			contentEl.createEl("code", { text: this.task.frequency ?? "" });
-			const only = contentEl.createDiv({ cls: "home-tasks-buttons" });
+			const only = contentEl.createDiv({ cls: "task-base-buttons" });
 			only.createEl("button", { text: "Close" }).addEventListener("click", () => this.close());
 			return;
 		}
 
-		const summary = contentEl.createDiv({ cls: "home-tasks-preview" });
+		const summary = contentEl.createDiv({ cls: "task-base-preview" });
 		if (this.recurring) {
 			summary.createDiv({ text: `Recurring — ${describeFrequency(this.task.frequency)}` });
 			summary.createEl("code", { text: this.task.frequency ?? "" });
 			if (this.computedDue) {
 				summary.createDiv({
-					cls: "home-tasks-preview-dates",
+					cls: "task-base-preview-dates",
 					text: `Due moves to ${formatHuman(this.computedDue)}`,
 				});
 			} else {
 				summary.createDiv({
-					cls: "home-tasks-preview-dates",
+					cls: "task-base-preview-dates",
 					text: "The recurrence rule could not be read, so the due date will be cleared.",
 				});
 			}
 		} else {
 			summary.createDiv({ text: "One-time — this marks the task done." });
 			summary.createDiv({
-				cls: "home-tasks-preview-dates",
+				cls: "task-base-preview-dates",
 				text: "The note stays in the vault and in the base. Nothing is deleted here.",
 			});
 		}
@@ -105,7 +105,7 @@ export class CompleteTaskModal extends Modal {
 			)
 			.addText((t) => t.setPlaceholder("22,731 mi").onChange((v) => (this.detail = v)));
 
-		const buttons = contentEl.createDiv({ cls: "home-tasks-buttons" });
+		const buttons = contentEl.createDiv({ cls: "task-base-buttons" });
 		buttons.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
 		buttons
 			.createEl("button", { text: this.recurring ? "Roll forward" : "Mark done", cls: "mod-cta" })

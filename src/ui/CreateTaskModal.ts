@@ -1,5 +1,5 @@
 import { type App, Modal, Notice, Setting, type TFile } from "obsidian";
-import type { HomeTasksSettings } from "../settings";
+import type { TaskBaseSettings } from "../settings";
 import { type ISODate, todayISO } from "../dates";
 import { PRIORITIES, type Priority, createTask, sanitizeFileName } from "../model/task";
 import { describeFrequency, nextDue } from "../recurrence";
@@ -23,7 +23,7 @@ export class CreateTaskModal extends Modal {
 
 	constructor(
 		app: App,
-		private settings: HomeTasksSettings,
+		private settings: TaskBaseSettings,
 		private knownCategories: string[],
 		private onCreated: (file: TFile) => void,
 	) {
@@ -33,7 +33,7 @@ export class CreateTaskModal extends Modal {
 
 	onOpen(): void {
 		const { contentEl } = this;
-		contentEl.addClass("home-tasks-modal");
+		contentEl.addClass("task-base-modal");
 		contentEl.createEl("h3", { text: "New task" });
 
 		new Setting(contentEl).setName("Name").addText((t) => {
@@ -89,7 +89,7 @@ export class CreateTaskModal extends Modal {
 		const assetSetting = new Setting(contentEl)
 			.setName("Asset")
 			.setDesc("Optional note this task services. Click the field to see every asset.");
-		this.assetHintEl = assetSetting.descEl.createDiv({ cls: "home-tasks-hint" });
+		this.assetHintEl = assetSetting.descEl.createDiv({ cls: "task-base-hint" });
 		assetSetting.addText((t) => {
 			t.setPlaceholder("Family Car");
 			t.onChange((v) => this.setAsset(v));
@@ -103,7 +103,7 @@ export class CreateTaskModal extends Modal {
 			t.setPlaceholder("Anything worth remembering in the note body.").onChange((v) => (this.body = v)),
 		);
 
-		const buttons = contentEl.createDiv({ cls: "home-tasks-buttons" });
+		const buttons = contentEl.createDiv({ cls: "task-base-buttons" });
 		buttons.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
 		buttons
 			.createEl("button", { text: "Create task", cls: "mod-cta" })

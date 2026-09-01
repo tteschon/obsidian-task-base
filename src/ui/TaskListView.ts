@@ -1,12 +1,12 @@
 import { ItemView, TFile, type WorkspaceLeaf, setIcon, setTooltip } from "obsidian";
-import type HomeTasksPlugin from "../main";
+import type TaskBasePlugin from "../main";
 import type { Task } from "../model/task";
 import type { Buckets } from "../model/taskRepository";
 import { describeFrequency } from "../recurrence";
 import { formatHuman, relativeDay, todayISO } from "../dates";
 import { CompleteTaskModal } from "./CompleteTaskModal";
 
-export const TASK_VIEW_TYPE = "home-tasks-view";
+export const TASK_VIEW_TYPE = "task-base-view";
 
 interface Section {
 	key: keyof Omit<Buckets, "all" | "stalled" | "invalidRule">;
@@ -20,7 +20,7 @@ const SECTIONS: Section[] = [
 		key: "overdue",
 		title: "Overdue",
 		empty: "Nothing overdue.",
-		cls: "home-tasks-section-overdue",
+		cls: "task-base-section-overdue",
 	},
 	{ key: "today", title: "Today", empty: "Nothing due today." },
 	{ key: "thisWeek", title: "This week", empty: "Nothing else due in the next seven days." },
@@ -35,7 +35,7 @@ const SECTIONS: Section[] = [
 export class TaskListView extends ItemView {
 	constructor(
 		leaf: WorkspaceLeaf,
-		private plugin: HomeTasksPlugin,
+		private plugin: TaskBasePlugin,
 	) {
 		super(leaf);
 	}
@@ -53,7 +53,7 @@ export class TaskListView extends ItemView {
 	}
 
 	async onOpen(): Promise<void> {
-		this.contentEl.addClass("home-tasks-view");
+		this.contentEl.addClass("task-base-view");
 		this.render();
 	}
 
@@ -68,20 +68,20 @@ export class TaskListView extends ItemView {
 		// Surfaced, never auto-fixed: a recurring task at done: true has
 		// silently stopped recurring and nothing else reports it.
 		if (buckets.stalled.length) {
-			const warn = el.createDiv({ cls: "home-tasks-warning" });
+			const warn = el.createDiv({ cls: "task-base-warning" });
 			warn.createDiv({
 				text: `${buckets.stalled.length} recurring ${
 					buckets.stalled.length === 1 ? "task is" : "tasks are"
 				} marked done and have stopped recurring:`,
 			});
 			for (const task of buckets.stalled) {
-				const line = warn.createDiv({ cls: "home-tasks-name", text: task.name });
+				const line = warn.createDiv({ cls: "task-base-name", text: task.name });
 				line.addEventListener("click", () => this.complete(task));
 			}
 		}
 
 		if (buckets.invalidRule.length) {
-			const warn = el.createDiv({ cls: "home-tasks-warning" });
+			const warn = el.createDiv({ cls: "task-base-warning" });
 			warn.createDiv({
 				text: `${buckets.invalidRule.length} ${
 					buckets.invalidRule.length === 1 ? "task has a repeat rule" : "tasks have repeat rules"
@@ -89,7 +89,7 @@ export class TaskListView extends ItemView {
 			});
 			for (const task of buckets.invalidRule) {
 				const line = warn.createDiv({
-					cls: "home-tasks-name",
+					cls: "task-base-name",
 					text: `${task.name} — ${task.frequency}`,
 				});
 				line.addEventListener("click", () => {
@@ -100,19 +100,19 @@ export class TaskListView extends ItemView {
 
 		for (const section of SECTIONS) {
 			const tasks = buckets[section.key];
-			const sectionEl = el.createDiv({ cls: `home-tasks-section ${section.cls ?? ""}` });
-			const header = sectionEl.createDiv({ cls: "home-tasks-section-header" });
+			const sectionEl = el.createDiv({ cls: `task-base-section ${section.cls ?? ""}` });
+			const header = sectionEl.createDiv({ cls: "task-base-section-header" });
 			header.createSpan({ text: section.title });
-			header.createSpan({ cls: "home-tasks-count", text: String(tasks.length) });
+			header.createSpan({ cls: "task-base-count", text: String(tasks.length) });
 
 			if (!tasks.length) {
-				sectionEl.createDiv({ cls: "home-tasks-empty", text: section.empty });
+				sectionEl.createDiv({ cls: "task-base-empty", text: section.empty });
 				continue;
 			}
 			for (const task of tasks) this.renderRow(sectionEl, task, today);
 		}
 
-		const footer = el.createDiv({ cls: "home-tasks-empty" });
+		const footer = el.createDiv({ cls: "task-base-empty" });
 		footer.setText(
 			`${buckets.all.filter((t) => !t.done).length} open of ${buckets.all.length} task notes.`,
 		);
@@ -126,10 +126,10 @@ export class TaskListView extends ItemView {
 	 * command palette.
 	 */
 	private renderToolbar(parent: HTMLElement): void {
-		const bar = parent.createDiv({ cls: "home-tasks-toolbar" });
+		const bar = parent.createDiv({ cls: "task-base-toolbar" });
 
-		const create = bar.createEl("button", { cls: "home-tasks-new mod-cta" });
-		setIcon(create.createSpan({ cls: "home-tasks-btn-icon" }), "plus");
+		const create = bar.createEl("button", { cls: "task-base-new mod-cta" });
+		setIcon(create.createSpan({ cls: "task-base-btn-icon" }), "plus");
 		create.createSpan({ text: "New task" });
 		create.addEventListener("click", () => this.plugin.openCreateTaskModal());
 
@@ -139,7 +139,7 @@ export class TaskListView extends ItemView {
 		// base leaves no button that silently does nothing.
 		const base = this.baseFile();
 		if (base) {
-			this.iconButton(bar, "table", "Open task base", () => {
+			this.iconButton(bar, "table", "Open base file", () => {
 				void this.app.workspace.getLeaf(false).openFile(base);
 			});
 		}
@@ -158,7 +158,7 @@ export class TaskListView extends ItemView {
 		label: string,
 		onClick: () => void,
 	): void {
-		const button = parent.createEl("button", { cls: "home-tasks-icon-button" });
+		const button = parent.createEl("button", { cls: "task-base-icon-button" });
 		setIcon(button, icon);
 		setTooltip(button, label);
 		button.setAttr("aria-label", label);
@@ -166,9 +166,9 @@ export class TaskListView extends ItemView {
 	}
 
 	private renderRow(parent: HTMLElement, task: Task, today: string): void {
-		const row = parent.createDiv({ cls: "home-tasks-row" });
+		const row = parent.createDiv({ cls: "task-base-row" });
 
-		const check = row.createEl("input", { cls: "home-tasks-check" });
+		const check = row.createEl("input", { cls: "task-base-check" });
 		check.type = "checkbox";
 		check.checked = task.done;
 		check.setAttr("aria-label", `Complete ${task.name}`);
@@ -178,16 +178,16 @@ export class TaskListView extends ItemView {
 		});
 
 		const main = row.createDiv();
-		const name = main.createDiv({ cls: "home-tasks-name", text: task.name });
+		const name = main.createDiv({ cls: "task-base-name", text: task.name });
 		name.addEventListener("click", () => {
 			void this.app.workspace.getLeaf(false).openFile(task.file);
 		});
 
-		const meta = main.createDiv({ cls: "home-tasks-meta" });
-		if (task.category) meta.createSpan({ cls: "home-tasks-chip", text: task.category });
+		const meta = main.createDiv({ cls: "task-base-meta" });
+		if (task.category) meta.createSpan({ cls: "task-base-chip", text: task.category });
 		if (task.due) {
 			meta.createSpan({
-				cls: task.due < today ? "home-tasks-due-late" : "",
+				cls: task.due < today ? "task-base-due-late" : "",
 				text: `${formatHuman(task.due)} · ${relativeDay(task.due, today)}`,
 			});
 		} else {
@@ -195,12 +195,12 @@ export class TaskListView extends ItemView {
 		}
 		if (task.priority !== "low") {
 			meta.createSpan({
-				cls: task.priority === "high" ? "home-tasks-priority-high" : "",
+				cls: task.priority === "high" ? "task-base-priority-high" : "",
 				text: task.priority,
 			});
 		}
 		const freq = describeFrequency(task.frequency);
-		if (freq) meta.createSpan({ cls: "home-tasks-chip", text: freq });
+		if (freq) meta.createSpan({ cls: "task-base-chip", text: freq });
 	}
 
 	private complete(task: Task): void {

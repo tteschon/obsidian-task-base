@@ -57,12 +57,12 @@ export class FrequencyModal extends Modal {
 
 	onOpen(): void {
 		const { contentEl } = this;
-		contentEl.addClass("home-tasks-modal");
+		contentEl.addClass("task-base-modal");
 		contentEl.createEl("h3", { text: "Repeat" });
 
-		const presetRow = contentEl.createDiv({ cls: "home-tasks-weekdays" });
+		const presetRow = contentEl.createDiv({ cls: "task-base-weekdays" });
 		for (const preset of PRESETS) {
-			const chip = presetRow.createSpan({ cls: "home-tasks-weekday", text: preset.label });
+			const chip = presetRow.createSpan({ cls: "task-base-weekday", text: preset.label });
 			chip.addEventListener("click", () => {
 				this.spec = { ...preset.spec };
 				this.renderBody();
@@ -72,7 +72,7 @@ export class FrequencyModal extends Modal {
 		this.bodyEl = contentEl.createDiv();
 		this.renderBody();
 
-		const buttons = contentEl.createDiv({ cls: "home-tasks-buttons" });
+		const buttons = contentEl.createDiv({ cls: "task-base-buttons" });
 		buttons
 			.createEl("button", { text: "Does not repeat" })
 			.addEventListener("click", () => {
@@ -118,9 +118,9 @@ export class FrequencyModal extends Modal {
 
 		if (this.spec.freq === "WEEKLY") {
 			const setting = new Setting(this.bodyEl).setName("On");
-			const row = setting.controlEl.createDiv({ cls: "home-tasks-weekdays" });
+			const row = setting.controlEl.createDiv({ cls: "task-base-weekdays" });
 			for (const day of WEEKDAYS) {
-				const el = row.createSpan({ cls: "home-tasks-weekday", text: day.label });
+				const el = row.createSpan({ cls: "task-base-weekday", text: day.label });
 				if (this.spec.byday.includes(day.code)) el.addClass("is-active");
 				el.addEventListener("click", () => {
 					this.spec.byday = this.spec.byday.includes(day.code)
@@ -145,7 +145,7 @@ export class FrequencyModal extends Modal {
 				);
 		}
 
-		this.previewEl = this.bodyEl.createDiv({ cls: "home-tasks-preview" });
+		this.previewEl = this.bodyEl.createDiv({ cls: "task-base-preview" });
 		this.renderPreview();
 	}
 
@@ -163,7 +163,7 @@ export class FrequencyModal extends Modal {
 		const dates = upcoming(rule, todayISO(), 3);
 		if (dates.length) {
 			this.previewEl.createDiv({
-				cls: "home-tasks-preview-dates",
+				cls: "task-base-preview-dates",
 				text: `Next: ${dates.map(formatHuman).join(" · ")}`,
 			});
 		}

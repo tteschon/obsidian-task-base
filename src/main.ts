@@ -1,6 +1,6 @@
 import { Notice, Plugin, type TFile, type WorkspaceLeaf, debounce } from "obsidian";
-import { HomeTasksSettingTab } from "./settings";
-import { type HomeTasksSettings, migrateSettings } from "./settingsData";
+import { TaskBaseSettingTab } from "./settings";
+import { type TaskBaseSettings, migrateSettings } from "./settingsData";
 import { TaskRepository } from "./model/taskRepository";
 import { type Task, hasCorruptDate, readTask, writeTask } from "./model/task";
 import { isRecurring, nextDue } from "./recurrence";
@@ -12,8 +12,8 @@ import { SetAssetModal } from "./ui/SetAssetModal";
 import { TaskSuggestModal } from "./ui/TaskSuggestModal";
 import { TASK_VIEW_TYPE, TaskListView } from "./ui/TaskListView";
 
-export default class HomeTasksPlugin extends Plugin {
-	settings!: HomeTasksSettings;
+export default class TaskBasePlugin extends Plugin {
+	settings!: TaskBaseSettings;
 	repository!: TaskRepository;
 
 	async onload(): Promise<void> {
@@ -88,7 +88,7 @@ export default class HomeTasksPlugin extends Plugin {
 			callback: () => void this.activateView(),
 		});
 
-		this.addSettingTab(new HomeTasksSettingTab(this.app, this));
+		this.addSettingTab(new TaskBaseSettingTab(this.app, this));
 
 		const refresh = debounce(() => this.refreshViews(), 400, true);
 		this.registerEvent(this.app.metadataCache.on("changed", refresh));

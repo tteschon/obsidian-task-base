@@ -10,7 +10,7 @@ import { type Priority } from "./model/frontmatter";
  * data written by an older version that no longer exists to compare against.
  */
 
-export interface HomeTasksSettings {
+export interface TaskBaseSettings {
 	/** Where new task notes are created. */
 	taskFolder: string;
 	/**
@@ -32,7 +32,7 @@ export interface HomeTasksSettings {
 	openViewOnStart: boolean;
 }
 
-export const DEFAULT_SETTINGS: HomeTasksSettings = {
+export const DEFAULT_SETTINGS: TaskBaseSettings = {
 	taskFolder: "tasks",
 	excludedFolders: ["Templates"],
 	categories: ["home", "yard", "errands", "vehicle", "health"],
@@ -58,11 +58,11 @@ const RETIRED = [
  * cannot be silently rewritten to disk on the next save and reappear as a
  * field nothing reads.
  */
-export function migrateSettings(raw: unknown): HomeTasksSettings {
+export function migrateSettings(raw: unknown): TaskBaseSettings {
 	const stored =
 		raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
 
-	const settings = { ...DEFAULT_SETTINGS } as HomeTasksSettings & Record<string, unknown>;
+	const settings = { ...DEFAULT_SETTINGS } as TaskBaseSettings & Record<string, unknown>;
 
 	for (const key of Object.keys(DEFAULT_SETTINGS)) {
 		if (stored[key] !== undefined) settings[key] = stored[key];

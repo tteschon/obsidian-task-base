@@ -1,4 +1,4 @@
-# Home Tasks
+# Task Base
 
 An Obsidian plugin for a note-per-task system: capture a task through a form,
 pick a cadence from a builder instead of typing RFC 5545, and complete a task
@@ -136,15 +136,15 @@ setting for exactly this reason.
 ## Installing in another vault
 
 The plugin is three files — `main.js`, `manifest.json`, `styles.css` — in
-`<vault>/.obsidian/plugins/home-tasks/`. Pick one route:
+`<vault>/.obsidian/plugins/task-base/`. Pick one route:
 
 | | |
 |---|---|
-| **Symlink** | `ln -s /path/to/repo <vault>/.obsidian/plugins/home-tasks` after `npm run build`. One build serves every vault, and `git pull` keeps them current. |
+| **Symlink** | `ln -s /path/to/repo <vault>/.obsidian/plugins/task-base` after `npm run build`. One build serves every vault, and `git pull` keeps them current. |
 | **Copy** | Copy the three built files in. Each vault can run a different version; you update each by hand. |
 | **Clone and build** | For another machine: clone, `npm install`, `npm run build`, then symlink or copy. |
 
-Then enable **Home Tasks** under Settings → Community plugins.
+Then enable **Task Base** under Settings → Community plugins.
 
 ### A new vault needs configuring, not just the files
 
@@ -197,7 +197,7 @@ would rewrite someone's note body.
 
 ```bash
 npm install
-echo "$HOME/path/to/YourVault/.obsidian/plugins/home-tasks" > .vault-plugin-dir
+echo "$HOME/path/to/YourVault/.obsidian/plugins/task-base" > .vault-plugin-dir
 npm run dev     # watch build, writes straight into the vault plugin folder
 npm test        # node:test over recurrence, frontmatter and asset links
 npm run build   # typecheck + minified build to the repo root, for release
@@ -211,9 +211,9 @@ up, and exits with an error if neither is set rather than quietly building
 somewhere you are not watching. `npm run build` ignores both and writes to the
 repo root.
 
-After the first build, enable **Home Tasks** in Settings → Community plugins.
+After the first build, enable **Task Base** in Settings → Community plugins.
 Reload it after a rebuild with the Obsidian CLI:
 
 ```bash
-obsidian plugin:reload id=home-tasks
+obsidian plugin:reload id=task-base
 ```

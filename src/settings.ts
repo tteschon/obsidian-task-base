@@ -1,17 +1,17 @@
 import { type App, PluginSettingTab, Setting } from "obsidian";
-import type HomeTasksPlugin from "./main";
+import type TaskBasePlugin from "./main";
 import { PRIORITIES, type Priority } from "./model/task";
 
 export {
 	DEFAULT_SETTINGS,
 	migrateSettings,
-	type HomeTasksSettings,
+	type TaskBaseSettings,
 } from "./settingsData";
 
-export class HomeTasksSettingTab extends PluginSettingTab {
+export class TaskBaseSettingTab extends PluginSettingTab {
 	constructor(
 		app: App,
-		private plugin: HomeTasksPlugin,
+		private plugin: TaskBasePlugin,
 	) {
 		super(app, plugin);
 	}
@@ -90,9 +90,9 @@ export class HomeTasksSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Task base")
+			.setName("Base file")
 			.setDesc(
-				"Opened by the button in the task pane. Leave empty to hide the button.",
+				"The .base file opened by the button in the task pane. Optional — the pane reads the vault directly and works without one. Leave empty to hide the button.",
 			)
 			.addText((t) =>
 				t

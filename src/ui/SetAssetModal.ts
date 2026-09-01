@@ -23,13 +23,13 @@ export class SetAssetModal extends Modal {
 
 	onOpen(): void {
 		const { contentEl } = this;
-		contentEl.addClass("home-tasks-modal");
+		contentEl.addClass("task-base-modal");
 		contentEl.createEl("h3", { text: `Asset for "${this.task.name}"` });
 
 		const setting = new Setting(contentEl)
 			.setName("Asset")
 			.setDesc("The note this task services. Click the field to see every asset.");
-		this.hintEl = setting.descEl.createDiv({ cls: "home-tasks-hint" });
+		this.hintEl = setting.descEl.createDiv({ cls: "task-base-hint" });
 		setting.addText((t) => {
 			t.setPlaceholder("Family Car");
 			t.setValue(this.name);
@@ -42,7 +42,7 @@ export class SetAssetModal extends Modal {
 		});
 		this.renderHint();
 
-		const buttons = contentEl.createDiv({ cls: "home-tasks-buttons" });
+		const buttons = contentEl.createDiv({ cls: "task-base-buttons" });
 		buttons.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
 		buttons.createEl("button", { text: "Clear asset" }).addEventListener("click", () => {
 			this.name = "";
