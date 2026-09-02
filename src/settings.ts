@@ -1,6 +1,12 @@
-import { type App, PluginSettingTab, Setting } from "obsidian";
+import { type App, PluginSettingTab, type SettingDefinitionItem, Setting } from "obsidian";
 import type TaskBasePlugin from "./main";
-import { PRIORITIES, type Priority } from "./model/task";
+import {
+	SETTING_SPECS,
+	type SettingSpec,
+	type TaskBaseSettings,
+	listToText,
+	textToList,
+} from "./settingsData";
 
 export {
 	DEFAULT_SETTINGS,
@@ -8,6 +14,29 @@ export {
 	type TaskBaseSettings,
 } from "./settingsData";
 
+/**
+ * A control value as display text.
+ *
+ * `getControlValue` returns `unknown` by contract, so this narrows rather than
+ * calling String() on something that might stringify to "[object Object]".
+ */
+function asText(value: unknown): string {
+	return typeof value === "string" ? value : "";
+}
+
+/** Settings stored as `string[]` but presented as comma-separated text. */
+const LIST_KEYS = new Set<keyof TaskBaseSettings>(
+	SETTING_SPECS.filter((s) => s.type.kind === "textList").map((s) => s.key),
+);
+
+/**
+ * The settings tab, rendered two ways from one description.
+ *
+ * `getSettingDefinitions` is how Obsidian 1.13+ builds its settings *search*;
+ * `display` is how every version actually draws the tab. Both walk
+ * `SETTING_SPECS`, so a setting cannot appear in one and be missing from the
+ * other.
+ */
 export class TaskBaseSettingTab extends PluginSettingTab {
 	constructor(
 		app: App,
@@ -16,102 +45,84 @@ export class TaskBaseSettingTab extends PluginSettingTab {
 		super(app, plugin);
 	}
 
+	getSettingDefinitions(): SettingDefinitionItem[] {
+		return SETTING_SPECS.map((spec): SettingDefinitionItem => {
+			const base = { name: spec.name, desc: spec.desc };
+			switch (spec.type.kind) {
+				case "dropdown":
+					return {
+						...base,
+						control: {
+							type: "dropdown",
+							key: spec.key,
+							options: Object.fromEntries(spec.type.options.map((o) => [o, o])),
+						},
+					};
+				case "toggle":
+					return { ...base, control: { type: "toggle", key: spec.key } };
+				default:
+					return {
+						...base,
+						control: { type: "text", key: spec.key, placeholder: spec.type.placeholder },
+					};
+			}
+		});
+	}
+
+	/**
+	 * The list settings store an array; the control shows text. Everything else
+	 * reads and writes `plugin.settings[key]` as the base class would.
+	 */
+	getControlValue(key: string): unknown {
+		const value = this.plugin.settings[key as keyof TaskBaseSettings];
+		return LIST_KEYS.has(key as keyof TaskBaseSettings) ? listToText(value) : value;
+	}
+
+	async setControlValue(key: string, value: unknown): Promise<void> {
+		const settings = this.plugin.settings as unknown as Record<string, unknown>;
+		settings[key] = LIST_KEYS.has(key as keyof TaskBaseSettings)
+			? textToList(String(value))
+			: value;
+		await this.plugin.saveSettings();
+		if (SETTING_SPECS.find((s) => s.key === key)?.refreshesViews) this.plugin.refreshViews();
+	}
+
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
+		for (const spec of SETTING_SPECS) this.renderSetting(containerEl, spec);
+	}
 
-		new Setting(containerEl)
-			.setName("New task folder")
-			.setDesc("Where the create command puts new task notes.")
-			.addText((t) =>
-				t
-					.setPlaceholder("tasks")
-					.setValue(this.plugin.settings.taskFolder)
-					.onChange(async (v) => {
-						this.plugin.settings.taskFolder = v.trim();
-						await this.plugin.saveSettings();
-					}),
-			);
+	private renderSetting(parent: HTMLElement, spec: SettingSpec): void {
+		const setting = new Setting(parent).setName(spec.name);
+		if (spec.desc) setting.setDesc(spec.desc);
 
-		new Setting(containerEl)
-			.setName("Excluded folders")
-			.setDesc(
-				"Comma-separated. Notes in these folders are ignored even when they carry type: task — a task template, or Kanban cards on their own schema. Must match the !file.inFolder clauses in your task base, or the pane and the base will disagree.",
-			)
-			.addText((t) =>
-				t
-					.setPlaceholder("Templates")
-					.setValue(this.plugin.settings.excludedFolders.join(", "))
-					.onChange(async (v) => {
-						this.plugin.settings.excludedFolders = v
-							.split(",")
-							.map((f) => f.trim())
-							.filter(Boolean);
-						await this.plugin.saveSettings();
-						this.plugin.refreshViews();
-					}),
-			);
+		const commit = (value: unknown) => void this.setControlValue(spec.key, value);
+		const current = this.getControlValue(spec.key);
 
-		new Setting(containerEl)
-			.setName("Categories")
-			.setDesc("Comma-separated. Categories already used in the vault are offered too.")
-			.addText((t) =>
-				t
-					.setValue(this.plugin.settings.categories.join(", "))
-					.onChange(async (v) => {
-						this.plugin.settings.categories = v
-							.split(",")
-							.map((s) => s.trim())
-							.filter(Boolean);
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Default priority")
-			.addDropdown((d) => {
-				for (const p of PRIORITIES) d.addOption(p, p);
-				d.setValue(this.plugin.settings.defaultPriority).onChange(async (v) => {
-					this.plugin.settings.defaultPriority = v as Priority;
-					await this.plugin.saveSettings();
+		switch (spec.type.kind) {
+			case "dropdown":
+				setting.addDropdown((d) => {
+					for (const option of spec.type.kind === "dropdown" ? spec.type.options : []) {
+						d.addOption(option, option);
+					}
+					d.setValue(asText(current)).onChange(commit);
 				});
-			});
-
-		new Setting(containerEl)
-			.setName("Completion log heading")
-			.setDesc("Where completion notes are appended in the note body.")
-			.addText((t) =>
-				t
-					.setValue(this.plugin.settings.logHeading)
-					.onChange(async (v) => {
-						this.plugin.settings.logHeading = v.trim() || "Service log";
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Base file")
-			.setDesc(
-				"The .base file opened by the button in the task pane. Optional — the pane reads the vault directly and works without one. Leave empty to hide the button.",
-			)
-			.addText((t) =>
-				t
-					.setPlaceholder("tasks/task base.base")
-					.setValue(this.plugin.settings.basePath)
-					.onChange(async (v) => {
-						this.plugin.settings.basePath = v.trim();
-						await this.plugin.saveSettings();
-						this.plugin.refreshViews();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Open task list on start")
-			.addToggle((t) =>
-				t.setValue(this.plugin.settings.openViewOnStart).onChange(async (v) => {
-					this.plugin.settings.openViewOnStart = v;
-					await this.plugin.saveSettings();
-				}),
-			);
+				return;
+			case "toggle":
+				setting.addToggle((t) => t.setValue(current === true).onChange(commit));
+				return;
+			default:
+				setting.addText((t) => {
+					const placeholder =
+						spec.type.kind === "text" || spec.type.kind === "textList"
+							? spec.type.placeholder
+							: undefined;
+					if (placeholder) t.setPlaceholder(placeholder);
+					t.setValue(asText(current)).onChange((v) =>
+						commit(spec.type.kind === "textList" ? v : v.trim()),
+					);
+				});
+		}
 	}
 }

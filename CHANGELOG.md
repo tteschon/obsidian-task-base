@@ -4,6 +4,36 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-09-02
+
+Addresses the Obsidian community directory's automated review.
+
+### Added
+
+- Release assets carry [GitHub artifact attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations),
+  so anyone can cryptographically verify a downloaded `main.js` was built from
+  this repository by its release workflow.
+- The settings tab implements `getSettingDefinitions()`, so on Obsidian 1.13.0
+  and later its settings appear in Obsidian's settings search. The classic
+  `display()` tab is still there for earlier versions; both are generated from
+  one description, so they cannot drift.
+
+### Changed
+
+- The **Open task base** command is now **Open base file** — a command name
+  should not repeat the plugin name, which Obsidian already shows beside it.
+  The command id is unchanged, so existing hotkeys still work.
+- The README documents that the plugin enumerates the vault's markdown files to
+  find notes by `type`, why that is necessary, and what it does not do.
+
+### Fixed
+
+- Lint now runs typescript-eslint's **type-checked** rules, and tests are type
+  checked too. Several unsafe `any` accesses around Obsidian's frontmatter API
+  and one mis-typed async callback were invisible under the previous config.
+- Dropped the `builtin-modules` dependency in favour of Node's own
+  `node:module` builtin list.
+
 ## [0.2.2] — 2026-09-02
 
 ### Changed

@@ -96,7 +96,7 @@ export default class TaskBasePlugin extends Plugin {
 
 		this.addCommand({
 			id: "open-base",
-			name: "Open task base",
+			name: "Open base file",
 			callback: () => void this.openOrCreateBase(),
 		});
 

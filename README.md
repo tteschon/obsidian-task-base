@@ -267,6 +267,22 @@ them. Daily notes lost the time component in the process.
 
 The plugin writes the bare form, and the vault's task template matches.
 
+## What the plugin reads, and why it reads the whole vault
+
+To find tasks it **enumerates the vault's markdown files and reads each one's
+frontmatter**, keeping those with `type: task` (and `type: asset` for the asset
+picker). That is inherent to the design rather than incidental: a note is a task
+because of a property, not because of where it sits, and Obsidian offers no API
+to query notes by frontmatter property.
+
+It reads frontmatter only — never the body of a note it was not asked to open —
+and the asset list is cached rather than recomputed per keystroke. It **makes no
+network requests of any kind**, collects no telemetry, and never deletes a note.
+Everything it writes goes through the vault API, inside the vault.
+
+If you would rather it looked at less, **Excluded folders** narrows what it
+considers.
+
 ## A hazard worth knowing
 
 **Do not name a method on the view class after a Workspace lifecycle verb.**

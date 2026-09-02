@@ -53,7 +53,7 @@ test("an empty explicit list is respected, not treated as absent", () => {
 
 test("nothing stored yields the defaults", () => {
 	for (const nothing of [undefined, null, {}, [], "corrupt", 42]) {
-		assert.deepEqual(migrateSettings(nothing), DEFAULT_SETTINGS, String(nothing));
+		assert.deepEqual(migrateSettings(nothing), DEFAULT_SETTINGS, JSON.stringify(nothing));
 	}
 });
 

@@ -15,5 +15,5 @@
 		"skipLibCheck": true,
 		"lib": ["DOM", "ES2021"]
 	},
-	"include": ["src/**/*.ts"]
+	"include": ["src/**/*.ts", "test/**/*.ts"]
 }

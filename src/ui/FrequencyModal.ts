@@ -49,7 +49,7 @@ export class FrequencyModal extends Modal {
 	constructor(
 		app: App,
 		current: string | null,
-		private onSubmit: (frequency: string | null) => void,
+		private onSubmit: (frequency: string | null) => void | Promise<void>,
 	) {
 		super(app);
 		this.spec = specFromFrequency(current) ?? { ...DEFAULT_SPEC };
@@ -83,12 +83,12 @@ export class FrequencyModal extends Modal {
 		buttons
 			.createEl("button", { text: "Does not repeat" })
 			.addEventListener("click", () => {
-				this.onSubmit(null);
+				void this.onSubmit(null);
 				this.close();
 			});
 		const save = buttons.createEl("button", { text: "Set repeat", cls: "mod-cta" });
 		save.addEventListener("click", () => {
-			this.onSubmit(buildFrequency(this.spec));
+			void this.onSubmit(buildFrequency(this.spec));
 			this.close();
 		});
 	}

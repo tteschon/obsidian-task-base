@@ -7,6 +7,11 @@ on:
 
 permissions:
   contents: write
+  # Artifact attestations let anyone cryptographically verify a release asset
+  # was built from this repository by this workflow, rather than uploaded by
+  # hand. Both of these are required to mint one.
+  id-token: write
+  attestations: write
 
 jobs:
   release:
@@ -37,6 +42,13 @@ jobs:
           "
 
       - run: npm run build
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            main.js
+            styles.css
       # main.js, manifest.json and styles.css as loose assets is the layout
       # Obsidian's installer and BRAT expect — not a zip.
       - name: Create release

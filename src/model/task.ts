@@ -69,9 +69,22 @@ function readText(value: unknown): string | null {
 	return trimmed.length ? trimmed : null;
 }
 
+/**
+ * A note's frontmatter as unknown-valued properties.
+ *
+ * Obsidian declares `FrontMatterCache` as `{ [key: string]: any }`, so every
+ * read off it is an unsafe `any` unless narrowed here. The values really are
+ * unknown — a user can type anything into a property — and `readDate` and
+ * `readText` below are what turn them into something trustworthy.
+ */
+function frontmatterOf(app: App, file: TFile): Record<string, unknown> | null {
+	const fm: unknown = app.metadataCache.getFileCache(file)?.frontmatter;
+	return fm && typeof fm === "object" ? (fm as Record<string, unknown>) : null;
+}
+
 /** Read a task from the metadata cache. Returns null unless `type: task`. */
 export function readTask(app: App, file: TFile): Task | null {
-	const fm = app.metadataCache.getFileCache(file)?.frontmatter;
+	const fm = frontmatterOf(app, file);
 	if (!fm || fm.type !== "task") return null;
 
 	const priority = readText(fm.priority)?.toLowerCase();
@@ -92,7 +105,7 @@ export function readTask(app: App, file: TFile): Task | null {
 
 /** True when a date property holds something that is not a date. */
 export function hasCorruptDate(app: App, file: TFile): boolean {
-	const fm = app.metadataCache.getFileCache(file)?.frontmatter;
+	const fm = frontmatterOf(app, file);
 	if (!fm) return false;
 	for (const key of ["due", "last done", "created"]) {
 		const raw = fm[key];
@@ -127,7 +140,7 @@ export async function writeTask(app: App, file: TFile, patch: TaskPatch): Promis
 		return value ?? null;
 	};
 
-	await app.fileManager.processFrontMatter(file, (fm) => {
+	await app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
 		if (patch.done !== undefined) fm.done = patch.done;
 		if (patch.due !== undefined) fm.due = clear("due", patch.due);
 		if (patch.priority !== undefined) fm.priority = patch.priority;

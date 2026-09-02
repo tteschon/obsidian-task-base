@@ -1,6 +1,8 @@
 import esbuild from "esbuild";
 import process from "process";
-import builtins from "builtin-modules";
+// Node exposes its own builtin list; the `builtin-modules` package existed
+// only to provide what the runtime already has.
+import { builtinModules } from "node:module";
 import { copyFileSync, existsSync, mkdirSync, readFileSync } from "fs";
 import { join } from "path";
 
@@ -89,7 +91,8 @@ const context = await esbuild.context({
 		// rrule imports luxon only for tzid support, which floating all-day
 		// rules never reach. Marking it external keeps it out of the bundle.
 		"luxon",
-		...builtins,
+		...builtinModules,
+		...builtinModules.map((m) => `node:${m}`),
 	],
 	format: "cjs",
 	target: "es2021",
