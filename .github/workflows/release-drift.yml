@@ -1,0 +1,49 @@
+# Catches the one failure that is invisible until someone tries to install:
+# manifest.json at HEAD names a version that has no release behind it. The
+# community directory reads the manifest to learn the current version, then
+# fetches the release tagged with it — so a bump pushed without its tag leaves
+# the listing looking healthy and every install failing.
+name: Release drift
+
+on:
+  push:
+    branches: [main]
+  # A bump and its tag can arrive seconds apart, so a push is only ever a
+  # warning. The daily run is the one that fails, by which point a missing tag
+  # is a mistake rather than a race.
+  schedule:
+    - cron: "17 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Manifest version must have a release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STRICT: ${{ github.event_name != 'push' }}
+        run: |
+          version=$(node -p "require('./manifest.json').version")
+          echo "manifest.json at HEAD: $version"
+
+          if gh release view "$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $version exists."
+            exit 0
+          fi
+
+          message="manifest.json is $version but no release is tagged $version. \
+          Obsidian reads the manifest to find the current version and then \
+          downloads that release, so installs fail while these disagree. \
+          Fix: git tag $version && git push origin $version"
+
+          if [ "$STRICT" = "true" ]; then
+            echo "::error::$message"
+            exit 1
+          fi
+          echo "::warning::$message"

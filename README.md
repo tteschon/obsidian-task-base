@@ -345,6 +345,19 @@ somewhere you are not watching. `npm run build` ignores both and writes to the
 repo root.
 
 After the first build, enable **Task Base** in Settings → Community plugins.
+
+### Cutting a release
+
+```bash
+npm version patch && git push --follow-tags
+```
+
+`npm version` bumps `manifest.json` and `versions.json` together and creates the
+tag; `--follow-tags` pushes the commit and the tag as one step. **Bumping without
+tagging breaks installs silently** — the directory reads the manifest to learn
+the current version and then downloads the release tagged with it, so a listing
+that looks healthy fails for everyone. The `Release drift` workflow warns on
+push and fails on its daily run if the two ever disagree.
 Reload it after a rebuild with the Obsidian CLI:
 
 ```bash
