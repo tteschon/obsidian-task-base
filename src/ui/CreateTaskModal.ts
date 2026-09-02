@@ -99,9 +99,17 @@ export class CreateTaskModal extends Modal {
 			});
 		});
 
-		new Setting(contentEl).setName("Notes").addTextArea((t) =>
-			t.setPlaceholder("Anything worth remembering in the note body.").onChange((v) => (this.body = v)),
-		);
+		// Stacked rather than squeezed into a Setting's narrow control column —
+		// see the .task-base-notes rules in styles.css.
+		new Setting(contentEl)
+			.setName("Notes")
+			.setClass("task-base-notes")
+			.addTextArea((t) => {
+				t.setPlaceholder("Anything worth remembering in the note body.").onChange(
+					(v) => (this.body = v),
+				);
+				t.inputEl.rows = 8;
+			});
 
 		const buttons = contentEl.createDiv({ cls: "task-base-buttons" });
 		buttons.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
