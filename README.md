@@ -8,6 +8,30 @@ It conforms to an existing schema rather than inventing one. A note is a task
 because it carries `type: task`; a Bases file collects them from anywhere in
 the vault.
 
+## Screenshots
+
+<img src="docs/screenshots/task-pane.png" width="330" alt="The task pane, showing Overdue, Today, This week, Needs attention and Later sections" />
+
+The pane's sections **partition the open set** — `Later` is whatever the other
+sections did not catch, so nothing can be due-dated into invisibility. It is
+collapsed by default so the pane opens on what is urgent.
+
+<img src="docs/screenshots/repeat-builder.png" width="540" alt="The repeat builder, with presets, a weekday picker, and a live preview" />
+
+Recurrence without typing RFC 5545. The preview shows the rule it will store,
+what that means in English, and the next three dates it resolves to.
+
+<img src="docs/screenshots/task-creation.png" width="470" alt="The new task form" /> <img src="docs/screenshots/task-edit.png" width="470" alt="Editing an existing task" />
+
+Capture on the left, edit on the right. Every field stays changeable after
+creation, and the asset field is a type-ahead over the notes in your vault
+rather than free text you can typo.
+
+<img src="docs/screenshots/base-view.png" width="900" alt="The generated task base as an Obsidian Bases table" />
+
+The same tasks in Obsidian's own Bases table. The plugin can create this base
+for you; it is optional, and the pane works without it.
+
 ## How this differs from the other task plugins
 
 **No plugin in Obsidian's 7,000-plus community registry mentions RRULE.** That
