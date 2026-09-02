@@ -158,7 +158,7 @@ export class CreateTaskModal extends Modal {
 				frequency: this.frequency,
 				asset: this.asset,
 				body: this.body,
-				dailyNoteDate: todayISO(),
+				createdOn: todayISO(),
 			});
 			new Notice(`Created ${file.path}`);
 			this.onCreated(file);

@@ -90,7 +90,7 @@ test("a new one-time task is rendered with bare empty keys", () => {
 			"---",
 			"done: false",
 			"due:",
-			'created: "[[2026-08-31]]"',
+			"created: 2026-08-31",
 			"priority: low",
 			"category:",
 			"last done:",
@@ -100,6 +100,7 @@ test("a new one-time task is rendered with bare empty keys", () => {
 		].join("\n"),
 	);
 	assert.doesNotMatch(note, /: ''/, "an empty string here would break the base's filters");
+	assert.doesNotMatch(note, /created:.*\[\[/, "created is a date property, not a wikilink");
 	assert.doesNotMatch(note, /: null/);
 });
 

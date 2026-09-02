@@ -81,7 +81,7 @@ export function readTask(app: App, file: TFile): Task | null {
 		name: file.basename,
 		done: fm.done === true,
 		due: readDate(fm.due),
-		created: readText(fm.created),
+		created: readDate(fm.created),
 		priority: (PRIORITIES as string[]).includes(priority ?? "") ? (priority as Priority) : "low",
 		category: readText(fm.category),
 		lastDone: readDate(fm["last done"]),
@@ -94,7 +94,7 @@ export function readTask(app: App, file: TFile): Task | null {
 export function hasCorruptDate(app: App, file: TFile): boolean {
 	const fm = app.metadataCache.getFileCache(file)?.frontmatter;
 	if (!fm) return false;
-	for (const key of ["due", "last done"]) {
+	for (const key of ["due", "last done", "created"]) {
 		const raw = fm[key];
 		if (raw == null || raw === "") continue;
 		if (readDate(raw) === null) return true;
@@ -165,8 +165,8 @@ export interface NewTask {
 	frequency: string | null;
 	asset: string | null;
 	body: string;
-	/** Daily-note folder, for the `created` backlink. */
-	dailyNoteDate: ISODate;
+	/** The date the task was captured. */
+	createdOn: ISODate;
 }
 
 /**
@@ -196,7 +196,7 @@ export async function createTask(app: App, spec: NewTask): Promise<TFile> {
 		path,
 		renderTaskNote({
 			due: spec.due,
-			created: spec.dailyNoteDate,
+			created: spec.createdOn,
 			priority: spec.priority,
 			category: spec.category,
 			frequency: spec.frequency,

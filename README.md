@@ -14,7 +14,7 @@ the vault.
 ---
 done: false                     # checkbox
 due: 2026-12-31                 # date
-created: "[[2026-08-31]]"       # wikilink to the daily note
+created: 2026-08-31             # date
 priority: low                   # low | medium | high
 category: vehicle               # home | yard | errands | vehicle | health
 last done: 2026-06-19           # date — latest completion only
@@ -202,6 +202,20 @@ only adds Obsidian's own table view and the button that opens it.
 Property types need no setup either: Obsidian infers `done` as a checkbox and
 `due` / `last done` as dates from the values the plugin writes. The plugin never
 touches `.obsidian/types.json`.
+
+## `created` is a date, vault-wide
+
+`created` used to hold a wikilink to the daily note — `"[[2026-08-31]]"` — which
+made it **text**, so it could not be sorted, compared, or used in a formula.
+
+It is now a bare `YYYY-MM-DD`, registered as `date` in `.obsidian/types.json`.
+Worth knowing before touching it again: **Obsidian property types are
+vault-wide, not per-note-type.** `created` was on 259 notes in three
+incompatible formats — 194 daily notes carrying `["YYYY-MM-DD HH:MM"]`, 36
+wikilinks, 23 bare dates — so registering the type meant normalising all of
+them. Daily notes lost the time component in the process.
+
+The plugin writes the bare form, and the vault's task template matches.
 
 ## A hazard worth knowing
 

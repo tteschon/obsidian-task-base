@@ -46,8 +46,8 @@ export const DEFAULT_SETTINGS: TaskBaseSettings = {
 const RETIRED = [
 	// Superseded by excludedFolders, which holds a list rather than one folder.
 	"templateFolder",
-	// Never read by anything: `created` is written as "[[YYYY-MM-DD]]", which
-	// Obsidian resolves by note name regardless of which folder it lives in.
+	// Never read by anything, and now doubly obsolete: `created` is a bare
+	// date registered as a `date` property, not a link to a daily note.
 	"dailyNoteFolder",
 ] as const;
 

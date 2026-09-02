@@ -20,6 +20,7 @@ export function sanitizeFileName(name: string): string {
 }
 
 export interface TaskNoteFields {
+	/** Capture date, written as a bare `YYYY-MM-DD` so Bases treats it as a date. */
 	due: ISODate | null;
 	created: ISODate;
 	priority: Priority;
@@ -45,7 +46,7 @@ export function renderTaskNote(fields: TaskNoteFields): string {
 		"---",
 		"done: false",
 		`due:${value(fields.due)}`,
-		`created: "[[${fields.created}]]"`,
+		`created: ${fields.created}`,
 		`priority: ${fields.priority}`,
 		`category:${value(fields.category)}`,
 		"last done:",
