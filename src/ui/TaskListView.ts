@@ -209,14 +209,14 @@ export class TaskListView extends ItemView {
 
 		this.iconButton(bar, "refresh-cw", "Refresh", () => this.render());
 
-		// Only offered when the base actually exists, so a renamed or missing
-		// base leaves no button that silently does nothing.
-		const base = this.baseFile();
-		if (base) {
-			this.iconButton(bar, "table", "Open base file", () => {
-				void this.app.workspace.getLeaf(false).openFile(base);
-			});
-		}
+		// Always shown. When there is no base the button makes one, which is the
+		// only discoverable way to get from "no base" to "a base".
+		this.iconButton(
+			bar,
+			"table",
+			this.baseFile() ? "Open base file" : "Create a task base",
+			() => void this.plugin.openOrCreateBase(),
+		);
 	}
 
 	private baseFile(): TFile | null {

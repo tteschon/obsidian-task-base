@@ -37,10 +37,13 @@ recurring; empty means one-time.
 | Edit repeat rule | Opens the RRULE builder on a task |
 | Set asset | Attaches, changes, or clears the asset on an existing task |
 | Recompute due date from repeat rule | Rolls `due` forward from `last done` |
+| Open task base | Opens the base file, creating one if there isn't one |
 | Open task list | The sidebar view |
 
 The task pane carries its own toolbar — **New task**, refresh, and a button
-that opens the base file. It sticks to the top so the primary action stays
+that opens the base file, **creating one if you don't have a base yet**. Its
+filters are generated from the **Excluded folders** setting, so a base made this
+way agrees with the pane by construction. It sticks to the top so the primary action stays
 reachable once the list scrolls. Right-click any row for Edit / Complete / Open.
 
 Its sections — Overdue, Today, This week, Needs attention, Later — **partition
@@ -197,7 +200,8 @@ else. Three settings matter:
 
 **No `.base` file is required.** The pane reads the metadata cache directly, so
 every command and every section works in a vault with no base at all. The base
-only adds Obsidian's own table view and the button that opens it.
+only adds Obsidian's own table view. If you want one, the pane's base button
+creates it — that is the whole setup.
 
 Property types need no setup either: Obsidian infers `done` as a checkbox and
 `due` / `last done` as dates from the values the plugin writes. The plugin never

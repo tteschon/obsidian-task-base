@@ -1,7 +1,8 @@
-import { Notice, Plugin, type TFile, type WorkspaceLeaf, debounce } from "obsidian";
+import { Notice, Plugin, TFile, type WorkspaceLeaf, debounce, normalizePath } from "obsidian";
 import { TaskBaseSettingTab } from "./settings";
 import { type TaskBaseSettings, migrateSettings } from "./settingsData";
 import { TaskRepository } from "./model/taskRepository";
+import { defaultBasePath, renderTaskBase } from "./model/baseFile";
 import { type Task, hasCorruptDate, readTask, writeTask } from "./model/task";
 import { isRecurring, nextDue } from "./recurrence";
 import { todayISO } from "./dates";
@@ -91,6 +92,12 @@ export default class TaskBasePlugin extends Plugin {
 		});
 
 		this.addCommand({
+			id: "open-base",
+			name: "Open task base",
+			callback: () => void this.openOrCreateBase(),
+		});
+
+		this.addCommand({
 			id: "open-task-view",
 			name: "Open task list",
 			callback: () => void this.activateView(),
@@ -163,6 +170,48 @@ export default class TaskBasePlugin extends Plugin {
 
 		await leaf.loadIfDeferred();
 		await workspace.revealLeaf(leaf);
+	}
+
+	/**
+	 * Open the task base, creating it first when there isn't one.
+	 *
+	 * The pane shows this button unconditionally: a base is optional — the pane
+	 * reads the metadata cache and works without one — but hiding the button
+	 * when no base exists meant the one thing that would give you a base was
+	 * invisible until you already had it.
+	 *
+	 * The generated filters are built from `excludedFolders`, so a base made
+	 * here agrees with the pane by construction rather than by coincidence.
+	 */
+	async openOrCreateBase(): Promise<void> {
+		const { vault, workspace } = this.app;
+		const configured = this.settings.basePath.trim();
+		const path = normalizePath(configured || defaultBasePath(this.settings.taskFolder));
+
+		let file = vault.getAbstractFileByPath(path);
+
+		if (!(file instanceof TFile)) {
+			try {
+				const folder = path.split("/").slice(0, -1).join("/");
+				if (folder && !vault.getFolderByPath(folder)) await vault.createFolder(folder);
+				file = await vault.create(
+					path,
+					renderTaskBase({ excludedFolders: this.settings.excludedFolders }),
+				);
+				new Notice(`Created ${path}`);
+			} catch (e) {
+				new Notice(`Could not create the base: ${e instanceof Error ? e.message : String(e)}`);
+				return;
+			}
+
+			if (configured !== path) {
+				this.settings.basePath = path;
+				await this.saveSettings();
+			}
+			this.refreshViews();
+		}
+
+		if (file instanceof TFile) await workspace.getLeaf(false).openFile(file);
 	}
 
 	/** Shared by the "Create task" command and the task pane's New task button. */
