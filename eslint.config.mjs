@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
+import comments from "@eslint-community/eslint-plugin-eslint-comments/configs";
 
 export default tseslint.config(
 	{ ignores: ["main.js", "node_modules/**"] },
@@ -9,6 +10,14 @@ export default tseslint.config(
 	// review runs these, and the plain `recommended` set does not — which is
 	// how two unsafe-any findings reached the reviewer having passed CI here.
 	...tseslint.configs.recommendedTypeChecked,
+
+	// A bare eslint-disable says a rule was silenced but not why, and the
+	// community directory's review rejects them. Requiring the `-- reason`
+	// suffix means the next suppression has to justify itself here first.
+	comments.recommended,
+	{
+		rules: { "@eslint-community/eslint-comments/require-description": "error" },
+	},
 	{
 		languageOptions: {
 			parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },

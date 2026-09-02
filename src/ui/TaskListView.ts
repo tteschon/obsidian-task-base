@@ -71,12 +71,15 @@ export class TaskListView extends ItemView {
 	}
 
 
-	/* ItemView declares onOpen as returning Promise<void>. There is nothing to
-	   await, but the signature is not ours to change. */
-	// eslint-disable-next-line @typescript-eslint/require-await
-	async onOpen(): Promise<void> {
+	/**
+	 * ItemView declares onOpen as returning `Promise<void>`. Drawing the pane is
+	 * synchronous, so this returns an already-resolved promise rather than
+	 * being `async` with nothing to await.
+	 */
+	onOpen(): Promise<void> {
 		this.contentEl.addClass("task-base-view");
 		this.render();
+		return Promise.resolve();
 	}
 
 	/**
@@ -338,9 +341,9 @@ export class TaskListView extends ItemView {
 		new CompleteTaskModal(this.app, task, this.plugin.settings, () => this.render()).open();
 	}
 
-	/* See onOpen. */
-	// eslint-disable-next-line @typescript-eslint/require-await
-	async onClose(): Promise<void> {
+	/** Synchronous, for the reason given on {@link onOpen}. */
+	onClose(): Promise<void> {
 		this.contentEl.empty();
+		return Promise.resolve();
 	}
 }

@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-task-base",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"description": "Create and manage note-per-task records with RRULE recurrence in Obsidian.",
 	"main": "main.js",
 	"scripts": {
@@ -17,6 +17,7 @@
 	],
 	"license": "MIT",
 	"devDependencies": {
+		"@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
 		"@eslint/js": "^9.39.5",
 		"@types/node": "^22.10.0",
 		"esbuild": "^0.25.0",

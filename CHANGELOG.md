@@ -4,6 +4,17 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] — 2026-09-02
+
+### Fixed
+
+- The two `ItemView` lifecycle methods no longer suppress a lint rule at all.
+  They return an already-resolved promise instead of being `async` with nothing
+  to await, which satisfies the signature without a directive.
+- Lint enforces `eslint-comments/require-description`, so any future
+  `eslint-disable` has to carry its reason inline — the rule the community
+  directory checks, now checked here first.
+
 ## [0.3.0] — 2026-09-02
 
 Addresses the Obsidian community directory's automated review.
