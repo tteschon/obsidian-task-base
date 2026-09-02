@@ -18,6 +18,24 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
+
+      # Obsidian matches a release to a plugin by the version in manifest.json,
+      # so a tag that disagrees with it produces a release nothing can install.
+      - name: Tag must match manifest version
+        run: |
+          manifest=$(node -p "require('./manifest.json').version")
+          if [ "$manifest" != "$GITHUB_REF_NAME" ]; then
+            echo "tag $GITHUB_REF_NAME != manifest.json $manifest" >&2
+            exit 1
+          fi
+          node -e "
+            const v = require('./versions.json');
+            if (!v['$GITHUB_REF_NAME']) {
+              console.error('versions.json has no entry for $GITHUB_REF_NAME');
+              process.exit(1);
+            }
+          "
+
       - run: npm run build
       # main.js, manifest.json and styles.css as loose assets is the layout
       # Obsidian's installer and BRAT expect — not a zip.
