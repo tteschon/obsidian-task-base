@@ -273,3 +273,32 @@
 	max-height: 22em;
 	overflow: auto;
 }
+
+/* The note body deserves the whole modal width. A Setting lays its control out
+   in a narrow right-hand column, which for a textarea leaves a box too small to
+   show its own placeholder — so this one stacks instead. */
+.task-base-modal .task-base-notes {
+	display: block;
+	border-top: 1px solid var(--background-modifier-border);
+	padding-top: 0.75em;
+}
+
+.task-base-modal .task-base-notes .setting-item-info {
+	margin-right: 0;
+	margin-bottom: 0.5em;
+}
+
+.task-base-modal .task-base-notes .setting-item-control {
+	width: 100%;
+	justify-content: flex-start;
+	padding-left: 0;
+}
+
+.task-base-modal .task-base-notes textarea {
+	width: 100%;
+	min-height: 10em;
+	/* Drag-resizable, but only taller: widening it would overflow the modal. */
+	resize: vertical;
+	font-family: inherit;
+	line-height: 1.4;
+}
