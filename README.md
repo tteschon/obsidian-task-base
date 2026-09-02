@@ -141,16 +141,44 @@ setting for exactly this reason.
 
 ## Installing in another vault
 
-The plugin is three files — `main.js`, `manifest.json`, `styles.css` — in
-`<vault>/.obsidian/plugins/task-base/`. Pick one route:
+A packaged Obsidian plugin is three files — `main.js`, `manifest.json`,
+`styles.css` — in `<vault>/.obsidian/plugins/task-base/`. There is no installer
+format beyond that.
 
-| | |
-|---|---|
-| **Symlink** | `ln -s /path/to/repo <vault>/.obsidian/plugins/task-base` after `npm run build`. One build serves every vault, and `git pull` keeps them current. |
-| **Copy** | Copy the three built files in. Each vault can run a different version; you update each by hand. |
-| **Clone and build** | For another machine: clone, `npm install`, `npm run build`, then symlink or copy. |
+### From a release (any machine)
 
-Then enable **Task Base** under Settings → Community plugins.
+Pushing a tag that matches `manifest.json`'s version builds and publishes those
+three files as release assets:
+
+```bash
+git tag 0.1.0 && git push origin 0.1.0
+```
+
+Then, on the machine with the other vault:
+
+```bash
+gh release download 0.1.0 --repo tteschon/obsidian-task-plugin \
+  -D "<vault>/.obsidian/plugins/task-base"
+```
+
+Or download the three assets from the Releases page while signed in — the repo
+being private only means you must be authenticated, not that this stops working.
+Enable **Task Base** under Settings → Community plugins afterwards; if Obsidian
+is already running, reload it first so it rescans the plugins folder.
+
+The release workflow refuses to publish when the tag disagrees with
+`manifest.json`, because Obsidian matches a release to an installed plugin by
+that version and a mismatch installs nowhere. `npm version patch` bumps
+`manifest.json` and `versions.json` together, which keeps them honest.
+
+### On this machine
+
+```bash
+ln -s /path/to/repo <vault>/.obsidian/plugins/task-base   # after npm run build
+```
+
+One build then serves every vault. Copying the three files by hand works too,
+and lets each vault run a different version.
 
 ### A new vault needs configuring, not just the files
 
