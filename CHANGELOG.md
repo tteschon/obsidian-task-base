@@ -4,6 +4,13 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] — 2026-09-02
+
+### Changed
+
+- The repository moved to `tteschon/obsidian-task-base`, matching the plugin's
+  id. The build banner and install instructions point at the new location.
+
 ## [0.2.1] — 2026-09-02
 
 ### Fixed

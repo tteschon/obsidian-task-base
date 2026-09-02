@@ -196,13 +196,13 @@ Pushing a tag that matches `manifest.json`'s version builds and publishes those
 three files as release assets:
 
 ```bash
-git tag 0.1.0 && git push origin 0.1.0
+git tag 0.2.2 && git push origin 0.2.2
 ```
 
 Then, on the machine with the other vault:
 
 ```bash
-gh release download 0.1.0 --repo tteschon/obsidian-task-plugin \
+gh release download 0.2.2 --repo tteschon/obsidian-task-base \
   -D "<vault>/.obsidian/plugins/task-base"
 ```
 
