@@ -8,6 +8,10 @@ It conforms to an existing schema rather than inventing one. A note is a task
 because it carries `type: task`; a Bases file collects them from anywhere in
 the vault.
 
+> A community plugin, not affiliated with or endorsed by Obsidian. "Bases"
+> refers to Obsidian's own feature, which this plugin reads and writes but is
+> not part of.
+
 ## Screenshots
 
 <img src="docs/screenshots/task-pane.png" width="330" alt="The task pane, showing Overdue, Today, This week, Needs attention and Later sections" />
