@@ -1,6 +1,7 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import comments from "@eslint-community/eslint-plugin-eslint-comments/configs";
+import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default tseslint.config(
 	{ ignores: ["main.js", "node_modules/**"] },
@@ -17,6 +18,23 @@ export default tseslint.config(
 	comments.recommended,
 	{
 		rules: { "@eslint-community/eslint-comments/require-description": "error" },
+	},
+
+	// The community directory's own rule set. Running it here is the point:
+	// every round of review feedback so far has been a rule this repo was not
+	// checking, found by a reviewer instead of by CI.
+	...obsidianmd.configs.recommended,
+
+	// Those rules describe what runs inside Obsidian. The build scripts and the
+	// test suite are plain Node and are supposed to import fs and node:test, so
+	// the mobile-safety and config-path rules are noise there — the kind that
+	// trains you to stop reading lint output.
+	{
+		files: ["**/*.mjs", "test/**/*.ts"],
+		rules: {
+			"obsidianmd/no-nodejs-modules": "off",
+			"obsidianmd/hardcoded-config-path": "off",
+		},
 	},
 	{
 		languageOptions: {

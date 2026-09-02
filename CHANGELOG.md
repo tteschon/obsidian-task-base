@@ -4,6 +4,17 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] — 2026-09-02
+
+### Changed
+
+- Lint runs `eslint-plugin-obsidianmd`, the community directory's own rule set,
+  and a workflow runs the directory's validation on every push and pull request
+  — or on any branch, tag or commit on demand. Both rounds of review feedback so
+  far were rules this repo was not checking.
+- The month-end toggle's description no longer names the RRULE keyword, and two
+  placeholders use sentence case, per `obsidianmd/ui/sentence-case`.
+
 ## [0.3.1] — 2026-09-02
 
 ### Fixed

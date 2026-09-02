@@ -1,0 +1,31 @@
+# The community directory's own validation, runnable before submitting rather
+# than discovered during review. Two rounds of review feedback were rules this
+# repo simply was not checking; this is the check.
+name: Obsidian review
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Run it against any branch, tag or commit without cutting a release.
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag or commit SHA to review"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Empty falls back to the ref that triggered the run.
+          ref: ${{ inputs.ref }}
+      - uses: obsidianmd/obsidian-workflows@v1
+        with:
+          mode: pr

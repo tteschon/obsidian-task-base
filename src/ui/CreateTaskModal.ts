@@ -92,7 +92,7 @@ export class CreateTaskModal extends Modal {
 			.setDesc("Optional note this task services. Click the field to see every asset.");
 		this.assetHintEl = assetSetting.descEl.createDiv({ cls: "task-base-hint" });
 		assetSetting.addText((t) => {
-			t.setPlaceholder("Family Car");
+			t.setPlaceholder("Family car");
 			t.onChange((v) => this.setAsset(v));
 			new AssetSuggest(this.app, t.inputEl, this.assets, (name) => {
 				t.setValue(name);

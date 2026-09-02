@@ -146,7 +146,7 @@ export class FrequencyModal extends Modal {
 		if (this.spec.freq === "MONTHLY") {
 			new Setting(this.bodyEl)
 				.setName("On the last day of the month")
-				.setDesc("Emits BYMONTHDAY=-1, which lands correctly on 28, 29, 30 and 31-day months.")
+				.setDesc("Lands on the last day, whether the month has 28, 29, 30 or 31 days.")
 				.addToggle((t) =>
 					t.setValue(this.spec.lastDayOfMonth).onChange((v) => {
 						this.spec.lastDayOfMonth = v;
