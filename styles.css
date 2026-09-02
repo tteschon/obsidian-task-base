@@ -337,3 +337,45 @@
 	width: 1em;
 	height: 1em;
 }
+
+/* The preset chips are their own step, separated from the controls below —
+   without this they butt straight into the "Repeats" row and read as one
+   broken group. */
+.task-base-modal .task-base-presets {
+	padding-bottom: 0.9em;
+	margin-bottom: 0.3em;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.task-base-modal .task-base-presets-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin-bottom: 0.45em;
+}
+
+/* Chips are buttons so they take focus and answer to Enter; these rules strip
+   the button chrome back to the chip look. */
+.task-base-modal .task-base-weekday {
+	background-color: transparent;
+	box-shadow: none;
+	height: auto;
+	font-family: inherit;
+	color: var(--text-normal);
+}
+
+.task-base-modal .task-base-weekday:hover {
+	background-color: var(--background-modifier-hover);
+	box-shadow: none;
+}
+
+.task-base-modal .task-base-weekday.is-active,
+.task-base-modal .task-base-weekday.is-active:hover {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.task-base-modal .task-base-weekday:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}

@@ -60,9 +60,16 @@ export class FrequencyModal extends Modal {
 		contentEl.addClass("task-base-modal");
 		contentEl.createEl("h3", { text: "Repeat" });
 
-		const presetRow = contentEl.createDiv({ cls: "task-base-weekdays" });
+		// A labelled block of its own: without the separator these chips ran
+		// straight into the "Repeats" row below and read as one broken group.
+		const presets = contentEl.createDiv({ cls: "task-base-presets" });
+		presets.createDiv({ cls: "task-base-presets-label", text: "Start from" });
+		const presetRow = presets.createDiv({ cls: "task-base-weekdays" });
 		for (const preset of PRESETS) {
-			const chip = presetRow.createSpan({ cls: "task-base-weekday", text: preset.label });
+			const chip = presetRow.createEl("button", {
+				cls: "task-base-weekday",
+				text: preset.label,
+			});
 			chip.addEventListener("click", () => {
 				this.spec = { ...preset.spec };
 				this.renderBody();
@@ -120,13 +127,16 @@ export class FrequencyModal extends Modal {
 			const setting = new Setting(this.bodyEl).setName("On");
 			const row = setting.controlEl.createDiv({ cls: "task-base-weekdays" });
 			for (const day of WEEKDAYS) {
-				const el = row.createSpan({ cls: "task-base-weekday", text: day.label });
+				const el = row.createEl("button", { cls: "task-base-weekday", text: day.label });
 				if (this.spec.byday.includes(day.code)) el.addClass("is-active");
+				el.setAttr("aria-pressed", String(this.spec.byday.includes(day.code)));
 				el.addEventListener("click", () => {
 					this.spec.byday = this.spec.byday.includes(day.code)
 						? this.spec.byday.filter((c) => c !== day.code)
 						: [...this.spec.byday, day.code];
-					el.toggleClass("is-active", this.spec.byday.includes(day.code));
+					const on = this.spec.byday.includes(day.code);
+					el.toggleClass("is-active", on);
+					el.setAttr("aria-pressed", String(on));
 					this.renderPreview();
 				});
 				this.weekdayEls.set(day.code, el);

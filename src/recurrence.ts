@@ -66,7 +66,10 @@ export function describeFrequency(text: unknown): string {
 	const opts = parseFrequency(text);
 	if (!opts) return "";
 	try {
-		return new RRule({ ...opts, dtstart: new Date(Date.UTC(2026, 0, 1)) }).toText();
+		const text = new RRule({ ...opts, dtstart: new Date(Date.UTC(2026, 0, 1)) }).toText();
+		// rrule renders BYMONTHDAY=-1 as "on the last", which is not a sentence.
+		// Only the bare trailing form is patched: "on the last Monday" is fine.
+		return text.replace(/ on the last$/, " on the last day");
 	} catch {
 		return typeof text === "string" ? text : "";
 	}

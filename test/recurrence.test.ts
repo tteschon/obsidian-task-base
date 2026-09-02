@@ -118,3 +118,15 @@ test("upcoming returns ascending future dates", () => {
 	assert.deepEqual(dates, ["2026-08-31", "2026-09-07", "2026-09-14"]);
 	assert.deepEqual(upcoming("nonsense", "2026-08-31"), []);
 });
+
+test("a month-end rule reads as a sentence", () => {
+	// rrule's own toText stops at "on the last", which is not English. Only the
+	// bare trailing form is patched — an ordinal weekday must survive intact.
+	assert.equal(describeFrequency("FREQ=MONTHLY;BYMONTHDAY=-1"), "every month on the last day");
+	assert.equal(
+		describeFrequency("FREQ=MONTHLY;INTERVAL=6;BYMONTHDAY=-1"),
+		"every 6 months on the last day",
+	);
+	assert.match(describeFrequency("FREQ=MONTHLY;BYDAY=-1MO"), /last Monday$/);
+	assert.equal(describeFrequency("FREQ=WEEKLY;BYDAY=TU"), "every week on Tuesday");
+});
