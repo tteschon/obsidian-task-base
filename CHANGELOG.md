@@ -4,6 +4,20 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] — 2026-09-02
+
+### Fixed
+
+- The repeat builder's preset chips ran straight into the **Repeats** row with
+  nothing between them, so the two read as one broken group. They are now a
+  labelled block with a separator.
+- A month-end rule rendered as "every 3 months on the last", which is not a
+  sentence. It now reads "on the last day". An ordinal weekday such as "on the
+  last Monday" is unaffected.
+- The preset chips and weekday toggles were spans carrying click handlers, so
+  neither could be reached by keyboard. They are buttons now, and the toggles
+  expose their state through `aria-pressed` rather than colour alone.
+
 ## [0.2.0] — 2026-09-02
 
 ### Added
