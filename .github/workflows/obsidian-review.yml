@@ -29,3 +29,6 @@ jobs:
       - uses: obsidianmd/obsidian-workflows@v1
         with:
           mode: pr
+          # The deeper scanner pass, off by default. It is what produced the
+          # behavioural findings in review, so it is the half worth having.
+          scanner-lint: true
