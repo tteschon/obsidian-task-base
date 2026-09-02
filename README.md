@@ -16,10 +16,12 @@ The pane's sections **partition the open set** — `Later` is whatever the other
 sections did not catch, so nothing can be due-dated into invisibility. It is
 collapsed by default so the pane opens on what is urgent.
 
-<img src="docs/screenshots/repeat-builder.png" width="540" alt="The repeat builder, with presets, a weekday picker, and a live preview" />
+<img src="docs/screenshots/task-builder.png" width="540" alt="The repeat builder, showing presets, a last-day-of-month toggle, and a live preview resolving to 30 September, 31 October and 30 November" />
 
 Recurrence without typing RFC 5545. The preview shows the rule it will store,
-what that means in English, and the next three dates it resolves to.
+what that means in English, and the next three dates it resolves to — here
+30 September, 31 October, 30 November, because `BYMONTHDAY=-1` means *the last
+day*, not *the 30th*.
 
 <img src="docs/screenshots/task-creation.png" width="470" alt="The new task form" /> <img src="docs/screenshots/task-edit.png" width="470" alt="Editing an existing task" />
 
