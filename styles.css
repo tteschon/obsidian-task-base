@@ -116,7 +116,7 @@
 
 .task-base-view .task-base-row {
 	display: grid;
-	grid-template-columns: auto 1fr;
+	grid-template-columns: auto 1fr auto;
 	gap: 0.5em;
 	align-items: start;
 	padding: 0.3em 0.25em;
@@ -301,4 +301,39 @@
 	resize: vertical;
 	font-family: inherit;
 	line-height: 1.4;
+}
+
+/* The row's action menu. Always visible rather than revealed on hover: there
+   is no hover on touch, and a control you cannot reach is the bug this fixes. */
+.task-base-view .task-base-row-menu {
+	grid-column: 3;
+	align-self: start;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.2em;
+	margin-top: 0.1em;
+	cursor: pointer;
+	color: var(--text-faint);
+	background: none;
+	border: none;
+	box-shadow: none;
+	height: auto;
+}
+
+.task-base-view .task-base-row-menu:hover {
+	color: var(--text-normal);
+	background-color: var(--background-modifier-hover);
+	box-shadow: none;
+}
+
+.task-base-view .task-base-row-menu:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 1px;
+	border-radius: var(--radius-s);
+}
+
+.task-base-view .task-base-row-menu .svg-icon {
+	width: 1em;
+	height: 1em;
 }

@@ -4,7 +4,7 @@ import { type ISODate, todayISO } from "../dates";
 import { PRIORITIES, type Priority, createTask, sanitizeFileName } from "../model/task";
 import { describeFrequency, nextDue } from "../recurrence";
 import { assetNameFromLink, formatAssetLink } from "../model/assetLink";
-import { findAssetByName } from "../model/assetRepository";
+import type { AssetRepository } from "../model/assetRepository";
 import { AssetSuggest } from "./AssetSuggest";
 import { FrequencyModal } from "./FrequencyModal";
 
@@ -25,6 +25,7 @@ export class CreateTaskModal extends Modal {
 		app: App,
 		private settings: TaskBaseSettings,
 		private knownCategories: string[],
+		private assets: AssetRepository,
 		private onCreated: (file: TFile) => void,
 	) {
 		super(app);
@@ -93,7 +94,7 @@ export class CreateTaskModal extends Modal {
 		assetSetting.addText((t) => {
 			t.setPlaceholder("Family Car");
 			t.onChange((v) => this.setAsset(v));
-			new AssetSuggest(this.app, t.inputEl, (name) => {
+			new AssetSuggest(this.app, t.inputEl, this.assets, (name) => {
 				t.setValue(name);
 				this.setAsset(name);
 			});
@@ -130,7 +131,7 @@ export class CreateTaskModal extends Modal {
 	private setAsset(raw: string): void {
 		this.asset = formatAssetLink(raw);
 		const name = assetNameFromLink(raw);
-		if (!name || findAssetByName(this.app, name)) {
+		if (!name || this.assets.findByName(name)) {
 			this.assetHintEl.setText("");
 			return;
 		}

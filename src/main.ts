@@ -3,6 +3,7 @@ import { TaskBaseSettingTab } from "./settings";
 import { type TaskBaseSettings, migrateSettings } from "./settingsData";
 import { TaskRepository } from "./model/taskRepository";
 import { defaultBasePath, renderTaskBase } from "./model/baseFile";
+import { AssetRepository } from "./model/assetRepository";
 import { type Task, hasCorruptDate, readTask, writeTask } from "./model/task";
 import { isRecurring, nextDue } from "./recurrence";
 import { todayISO } from "./dates";
@@ -17,10 +18,12 @@ import { TASK_VIEW_TYPE, TaskListView } from "./ui/TaskListView";
 export default class TaskBasePlugin extends Plugin {
 	settings!: TaskBaseSettings;
 	repository!: TaskRepository;
+	assets!: AssetRepository;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.repository = new TaskRepository(this.app, () => this.settings.excludedFolders);
+		this.assets = new AssetRepository(this.app);
 
 		this.registerView(TASK_VIEW_TYPE, (leaf: WorkspaceLeaf) => new TaskListView(leaf, this));
 
@@ -66,7 +69,7 @@ export default class TaskBasePlugin extends Plugin {
 			name: "Set asset",
 			callback: () =>
 				this.withTask("Set the asset on which task?", (task) => {
-					new SetAssetModal(this.app, task, () => this.refreshViews()).open();
+					new SetAssetModal(this.app, task, this.assets, () => this.refreshViews()).open();
 				}),
 		});
 
@@ -105,7 +108,12 @@ export default class TaskBasePlugin extends Plugin {
 
 		this.addSettingTab(new TaskBaseSettingTab(this.app, this));
 
-		const refresh = debounce(() => this.refreshViews(), 400, true);
+		const refresh = debounce(() => {
+			// Any of these can add, rename or remove an asset note, which would
+			// leave the picker offering notes that no longer exist.
+			this.assets.invalidate();
+			this.refreshViews();
+		}, 400, true);
 		this.registerEvent(this.app.metadataCache.on("changed", refresh));
 		this.registerEvent(this.app.vault.on("delete", refresh));
 		this.registerEvent(this.app.vault.on("rename", refresh));
@@ -216,7 +224,7 @@ export default class TaskBasePlugin extends Plugin {
 
 	/** Shared by the "Create task" command and the task pane's New task button. */
 	openCreateTaskModal(): void {
-		new CreateTaskModal(this.app, this.settings, this.repository.categories(), (file) => {
+		new CreateTaskModal(this.app, this.settings, this.repository.categories(), this.assets, (file: TFile) => {
 			this.refreshViews();
 			void this.app.workspace.getLeaf(false).openFile(file);
 		}).open();
@@ -224,7 +232,7 @@ export default class TaskBasePlugin extends Plugin {
 
 	/** Shared by the "Edit task" command and the task pane's context menu. */
 	openEditTaskModal(task: Task): void {
-		new EditTaskModal(this.app, task, this.settings, this.repository.categories(), () =>
+		new EditTaskModal(this.app, task, this.settings, this.repository.categories(), this.assets, () =>
 			this.refreshViews(),
 		).open();
 	}

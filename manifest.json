@@ -5,5 +5,6 @@
 	"minAppVersion": "1.7.2",
 	"description": "Create and manage note-per-task records with RRULE recurrence, backed by a Bases task base.",
 	"author": "tteschon",
+	"authorUrl": "https://github.com/tteschon",
 	"isDesktopOnly": false
 }

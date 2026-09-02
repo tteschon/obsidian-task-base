@@ -11,7 +11,7 @@ test("the single template folder becomes the first excluded folder", () => {
 	const migrated = migrateSettings({
 		taskFolder: "tasks",
 		templateFolder: "Templates",
-		dailyNoteFolder: "📝 Daily Notes",
+		dailyNoteFolder: "Journal",
 	});
 	assert.deepEqual(migrated.excludedFolders, ["Templates"]);
 	assert.equal(migrated.taskFolder, "tasks");
@@ -27,7 +27,7 @@ test("an empty template folder means exclude nothing, not the default", () => {
 test("retired keys never survive into the settings", () => {
 	const migrated = migrateSettings({
 		templateFolder: "Templates",
-		dailyNoteFolder: "📝 Daily Notes",
+		dailyNoteFolder: "Journal",
 		somethingElseEntirely: true,
 	});
 	for (const key of RETIRED_SETTING_KEYS) {
@@ -42,9 +42,9 @@ test("retired keys never survive into the settings", () => {
 test("an explicit excluded list wins over the old single folder", () => {
 	const migrated = migrateSettings({
 		templateFolder: "Templates",
-		excludedFolders: ["🗃 Kanban Cards"],
+		excludedFolders: ["🗂 Project Cards"],
 	});
-	assert.deepEqual(migrated.excludedFolders, ["🗃 Kanban Cards"]);
+	assert.deepEqual(migrated.excludedFolders, ["🗂 Project Cards"]);
 });
 
 test("an empty explicit list is respected, not treated as absent", () => {
@@ -110,9 +110,9 @@ test("exclusion is not a bare string prefix", () => {
 });
 
 test("real vault paths sort correctly", () => {
-	const excluded = ["Templates", "🗃 Kanban Cards"];
+	const excluded = ["Templates", "🗂 Project Cards"];
 	assert.equal(isInExcludedFolder("Templates/task template @{{date}}.md", excluded), true);
-	assert.equal(isInExcludedFolder("🗃 Kanban Cards/Some card.md", excluded), true);
+	assert.equal(isInExcludedFolder("🗂 Project Cards/Some card.md", excluded), true);
 	assert.equal(isInExcludedFolder("tasks/Take out the garbage.md", excluded), false);
 	assert.equal(isInExcludedFolder("tasks/task repo/Mow Lawn.md", excluded), false);
 });

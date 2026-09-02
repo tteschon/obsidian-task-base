@@ -277,6 +277,17 @@ export class TaskListView extends ItemView {
 		}
 		const freq = describeFrequency(task.frequency);
 		if (freq) meta.createSpan({ cls: "task-base-chip", text: freq });
+
+		// Right-click is a shortcut, not the only route: there is none on touch,
+		// and none from the keyboard. This button answers to all three.
+		const menu = row.createEl("button", { cls: "task-base-row-menu" });
+		setIcon(menu, "more-vertical");
+		setTooltip(menu, `Actions for ${task.name}`);
+		menu.setAttr("aria-label", `Actions for ${task.name}`);
+		menu.addEventListener("click", (e) => {
+			e.stopPropagation();
+			this.showMenu(task, menu);
+		});
 	}
 
 	/**
@@ -292,7 +303,7 @@ export class TaskListView extends ItemView {
 		void this.app.workspace.getLeaf(false).openFile(task.file);
 	}
 
-	private showMenu(task: Task, event: MouseEvent): void {
+	private showMenu(task: Task, anchor: MouseEvent | HTMLElement): void {
 		const menu = new Menu();
 		menu.addItem((i) =>
 			i
@@ -312,7 +323,12 @@ export class TaskListView extends ItemView {
 				.setIcon("file-text")
 				.onClick(() => this.openNote(task)),
 		);
-		menu.showAtMouseEvent(event);
+		if (anchor instanceof MouseEvent) {
+			menu.showAtMouseEvent(anchor);
+		} else {
+			const rect = anchor.getBoundingClientRect();
+			menu.showAtPosition({ x: rect.left, y: rect.bottom });
+		}
 	}
 
 	private complete(task: Task): void {

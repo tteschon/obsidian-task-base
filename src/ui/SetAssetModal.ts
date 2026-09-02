@@ -2,7 +2,7 @@ import { type App, Modal, Notice, Setting } from "obsidian";
 import type { Task } from "../model/task";
 import { writeTask } from "../model/task";
 import { assetNameFromLink, formatAssetLink } from "../model/assetLink";
-import { findAssetByName } from "../model/assetRepository";
+import type { AssetRepository } from "../model/assetRepository";
 import { AssetSuggest } from "./AssetSuggest";
 
 /** Attach, change, or clear the asset on an existing task. */
@@ -14,6 +14,7 @@ export class SetAssetModal extends Modal {
 	constructor(
 		app: App,
 		private task: Task,
+		private assets: AssetRepository,
 		private onDone: () => void,
 	) {
 		super(app);
@@ -34,7 +35,7 @@ export class SetAssetModal extends Modal {
 			t.setPlaceholder("Family Car");
 			t.setValue(this.name);
 			t.onChange((v) => this.setName(v));
-			new AssetSuggest(this.app, t.inputEl, (picked) => {
+			new AssetSuggest(this.app, t.inputEl, this.assets, (picked) => {
 				t.setValue(picked);
 				this.setName(picked);
 			});
@@ -60,7 +61,7 @@ export class SetAssetModal extends Modal {
 
 	private renderHint(): void {
 		const name = assetNameFromLink(this.name);
-		if (!name || findAssetByName(this.app, name)) {
+		if (!name || this.assets.findByName(name)) {
 			this.hintEl.setText("");
 			return;
 		}

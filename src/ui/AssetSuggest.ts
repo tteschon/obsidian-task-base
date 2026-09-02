@@ -1,5 +1,5 @@
 import { AbstractInputSuggest, type App, type TFile } from "obsidian";
-import { listAssets } from "../model/assetRepository";
+import type { AssetRepository } from "../model/assetRepository";
 
 /**
  * Type-ahead over the vault's asset notes.
@@ -12,6 +12,7 @@ export class AssetSuggest extends AbstractInputSuggest<TFile> {
 	constructor(
 		app: App,
 		private inputEl: HTMLInputElement,
+		private assets: AssetRepository,
 		private onPick: (name: string) => void,
 	) {
 		super(app, inputEl);
@@ -25,10 +26,7 @@ export class AssetSuggest extends AbstractInputSuggest<TFile> {
 	}
 
 	getSuggestions(query: string): TFile[] {
-		const assets = listAssets(this.app);
-		const q = query.trim().toLowerCase();
-		if (!q) return assets;
-		return assets.filter((f) => f.basename.toLowerCase().includes(q));
+		return this.assets.search(query);
 	}
 
 	renderSuggestion(file: TFile, el: HTMLElement): void {

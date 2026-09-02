@@ -8,6 +8,22 @@ It conforms to an existing schema rather than inventing one. A note is a task
 because it carries `type: task`; a Bases file collects them from anywhere in
 the vault.
 
+## How this differs from the other task plugins
+
+**No plugin in Obsidian's 7,000-plus community registry mentions RRULE.** That
+is the distinction: recurrence here is an RFC 5545 rule stored on the note —
+`FREQ=MONTHLY;INTERVAL=6;BYMONTHDAY=-1` — evaluated with the same library
+calendar software uses, rather than a bespoke "every 6 months" string.
+
+- **Tasks** manages checkboxes written inline in note bodies. Different unit of
+  work entirely; the two do not overlap.
+- **TaskNotes** is also note-per-task, built around a calendar, pomodoro and
+  time tracking. If you want time tracking, use that.
+
+This one is for things that come back on a schedule — maintenance, chores,
+services — where the note is the record, a Bases file is the view, and the
+recurrence rule is a standard you can read somewhere else.
+
 ## The task note contract
 
 ```yaml
@@ -256,6 +272,12 @@ test/                        node:test suites over the pure modules
 which is what makes the test suite runnable outside the app — and those are the
 functions most worth testing, since a regex that strays out of the frontmatter
 would rewrite someone's note body.
+
+## Third-party code
+
+`main.js` is a bundle: it contains [rrule](https://github.com/jakubroztocil/rrule)
+(BSD-3-Clause). Its notice travels in the banner at the top of every built
+`main.js` as well as in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 ## Development
 

@@ -11,9 +11,9 @@ test("the identity filter is what collects tasks at all", () => {
 test("excluded folders become filter clauses, quoted", () => {
 	// A leading ! is a YAML tag indicator, so the clause must be quoted or the
 	// whole base fails to parse.
-	const out = render(["Templates", "🗃 Kanban Cards"]);
+	const out = render(["Templates", "🗂 Project Cards"]);
 	assert.match(out, /^ {4}- '!file\.inFolder\("Templates"\)'$/m);
-	assert.match(out, /^ {4}- '!file\.inFolder\("🗃 Kanban Cards"\)'$/m);
+	assert.match(out, /^ {4}- '!file\.inFolder\("🗂 Project Cards"\)'$/m);
 });
 
 test("an empty or blank exclusion list adds no clauses", () => {

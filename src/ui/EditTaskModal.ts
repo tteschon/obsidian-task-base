@@ -3,7 +3,7 @@ import type { TaskBaseSettings } from "../settingsData";
 import { type ISODate, parseISO } from "../dates";
 import { PRIORITIES, type Priority, type Task, type TaskPatch, writeTask } from "../model/task";
 import { assetNameFromLink, formatAssetLink } from "../model/assetLink";
-import { findAssetByName } from "../model/assetRepository";
+import type { AssetRepository } from "../model/assetRepository";
 import { describeFrequency } from "../recurrence";
 import { AssetSuggest } from "./AssetSuggest";
 import { FrequencyModal } from "./FrequencyModal";
@@ -29,6 +29,7 @@ export class EditTaskModal extends Modal {
 		private task: Task,
 		private settings: TaskBaseSettings,
 		private knownCategories: string[],
+		private assets: AssetRepository,
 		private onSaved: () => void,
 	) {
 		super(app);
@@ -87,7 +88,7 @@ export class EditTaskModal extends Modal {
 		assetSetting.addText((t) => {
 			t.setValue(this.assetName);
 			t.onChange((v) => this.setAsset(v));
-			new AssetSuggest(this.app, t.inputEl, (picked) => {
+			new AssetSuggest(this.app, t.inputEl, this.assets, (picked) => {
 				t.setValue(picked);
 				this.setAsset(picked);
 			});
@@ -109,7 +110,7 @@ export class EditTaskModal extends Modal {
 	private renderAssetHint(): void {
 		const name = assetNameFromLink(this.assetName);
 		this.assetHintEl.setText(
-			!name || findAssetByName(this.app, name)
+			!name || this.assets.findByName(name)
 				? ""
 				: `No asset note named "${name}" — the link will be unresolved.`,
 		);
