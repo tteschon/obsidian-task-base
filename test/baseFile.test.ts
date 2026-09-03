@@ -34,11 +34,31 @@ test("trailing slashes are trimmed so the clause matches the pane's rule", () =>
 	assert.match(render(["Templates/"]), /inFolder\("Templates"\)/);
 });
 
-test("the four views the pane mirrors are all present", () => {
+test("the five views are all present", () => {
 	const out = render();
-	for (const name of ["Table", "Today", "This week", "Needs attention"]) {
+	for (const name of ["Table", "Today", "This week", "Needs attention", "Sweep"]) {
 		assert.match(out, new RegExp(`^ {4}name: ${name}$`, "m"), name);
 	}
+});
+
+test("every formula the base defines is listed by a view", () => {
+	// A formula no view names is returned by no query — computed nowhere,
+	// readable nowhere, and silent about both.
+	const out = render();
+	const defined = [...out.matchAll(/^ {2}(\w+): if\(/gm)].map((m) => m[1]);
+	assert.deepEqual(defined.sort(), ["days_until_due", "overdue"]);
+	for (const name of defined) {
+		assert.match(out, new RegExp(`^ {6}- formula\\.${name}$`, "m"), name);
+	}
+});
+
+test("the sweep view lists finished one-time tasks only", () => {
+	// The frequency clause is the guard: a recurring task wrongly sitting in
+	// done must never appear on a list of things to delete.
+	const out = render();
+	const sweep = out.slice(out.indexOf("    name: Sweep"));
+	assert.match(sweep, /^ {8}- done == true$/m);
+	assert.match(sweep, /^ {8}- frequency == null$/m);
 });
 
 test("formulas guard against an empty due date", () => {

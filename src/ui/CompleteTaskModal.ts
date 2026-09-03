@@ -2,6 +2,7 @@ import { type App, Modal, Notice, Setting } from "obsidian";
 import type { TaskBaseSettings } from "../settings";
 import { type ISODate, formatHuman, todayISO } from "../dates";
 import { type Task, appendLog, writeTask } from "../model/task";
+import { completionPatch } from "../model/completion";
 import { type FrequencyState, describeFrequency, frequencyState, nextDue } from "../recurrence";
 
 /**
@@ -115,15 +116,18 @@ export class CompleteTaskModal extends Modal {
 	private async submit(): Promise<void> {
 		const today = todayISO();
 		try {
-			if (this.recurring) {
-				await writeTask(this.app, this.task.file, {
-					lastDone: today,
-					due: this.computedDue,
-					done: false,
-				});
-			} else {
-				await writeTask(this.app, this.task.file, { lastDone: today, done: true });
+			// The policy lives in model/completion.ts, shared with the API this
+			// plugin exposes to automation. Assembling a patch here instead would
+			// be a second copy of the branch, free to drift from it.
+			const outcome = completionPatch(this.task, {
+				completedOn: today,
+				...(this.recurring ? { dueOverride: this.computedDue } : {}),
+			});
+			if (outcome.kind === "refused") {
+				new Notice(outcome.reason ?? "This task cannot be completed.");
+				return;
 			}
+			await writeTask(this.app, this.task.file, outcome.patch);
 			if (this.detail.trim()) {
 				await appendLog(this.app, this.task.file, this.detail, this.settings.logHeading, today);
 			}

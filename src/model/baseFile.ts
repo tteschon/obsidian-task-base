@@ -53,6 +53,11 @@ export function renderTaskBase(options: TaskBaseOptions): string {
 		"      - last done",
 		"      - priority",
 		"      - asset",
+		// A formula the base defines is returned by nothing unless a view lists
+		// it, so an unlisted formula is dead YAML: computed nowhere, queryable
+		// nowhere, and silent about both.
+		"      - formula.days_until_due",
+		"      - formula.overdue",
 		"    sort:",
 		"      - property: done",
 		"        direction: ASC",
@@ -96,6 +101,21 @@ export function renderTaskBase(options: TaskBaseOptions): string {
 		"      - frequency",
 		"      - last done",
 		"      - priority",
+		// Finished one-time tasks, for whoever is clearing them out. Listing
+		// them is a report, not a deletion — this plugin never removes a note.
+		// The `frequency == null` clause is what keeps a recurring task that is
+		// wrongly sitting in `done` off that list.
+		"  - type: table",
+		"    name: Sweep",
+		"    filters:",
+		"      and:",
+		"        - done == true",
+		"        - frequency == null",
+		"    order:",
+		"      - file.name",
+		"      - category",
+		"      - last done",
+		"      - created",
 	);
 
 	return lines.join("\n") + "\n";

@@ -1,4 +1,4 @@
-import { type App, type TFile, normalizePath } from "obsidian";
+import type { App, TFile } from "obsidian";
 import { type ISODate, parseISO, todayISO } from "../dates";
 import {
 	PRIORITIES,
@@ -6,8 +6,8 @@ import {
 	appendLogLine,
 	normalizeEmptyKeysIn,
 	renderTaskNote,
-	sanitizeFileName,
 } from "./frontmatter";
+import { createNote } from "./note";
 
 export { PRIORITIES, sanitizeFileName } from "./frontmatter";
 export type { Priority } from "./frontmatter";
@@ -188,26 +188,13 @@ export interface NewTask {
  * The frontmatter is rendered as text by `renderTaskNote` rather than written
  * through `processFrontMatter`, so the key order matches the vault's template
  * exactly and empty keys come out bare — `frequency:`, not `frequency: ''`.
+ * Placing the file is `createNote`'s job, shared with asset notes.
  */
-export async function createTask(app: App, spec: NewTask): Promise<TFile> {
-	const fileName = sanitizeFileName(spec.name);
-	if (!fileName) throw new Error("Task name is empty after removing illegal characters.");
-
-	const folder = normalizePath(spec.folder);
-	if (folder && !app.vault.getFolderByPath(folder)) {
-		await app.vault.createFolder(folder);
-	}
-
-	let path = normalizePath(folder ? `${folder}/${fileName}.md` : `${fileName}.md`);
-	// Never overwrite an existing note; fall back to a numbered name the way
-	// Obsidian itself does.
-	for (let i = 1; app.vault.getAbstractFileByPath(path); i++) {
-		path = normalizePath(folder ? `${folder}/${fileName} ${i}.md` : `${fileName} ${i}.md`);
-	}
-
-	return app.vault.create(
-		path,
-		renderTaskNote({
+export function createTask(app: App, spec: NewTask): Promise<TFile> {
+	return createNote(app, {
+		name: spec.name,
+		folder: spec.folder,
+		content: renderTaskNote({
 			due: spec.due,
 			created: spec.createdOn,
 			priority: spec.priority,
@@ -216,7 +203,7 @@ export async function createTask(app: App, spec: NewTask): Promise<TFile> {
 			asset: spec.asset,
 			body: spec.body,
 		}),
-	);
+	});
 }
 
 /**
