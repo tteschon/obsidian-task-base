@@ -7,6 +7,7 @@ import { AssetRepository } from "./model/assetRepository";
 import { type Task, hasCorruptDate, readTask, writeTask } from "./model/task";
 import { isRecurring, nextDue } from "./recurrence";
 import { todayISO } from "./dates";
+import { CreateAssetModal } from "./ui/CreateAssetModal";
 import { CreateTaskModal } from "./ui/CreateTaskModal";
 import { EditTaskModal } from "./ui/EditTaskModal";
 import { CompleteTaskModal } from "./ui/CompleteTaskModal";
@@ -69,8 +70,26 @@ export default class TaskBasePlugin extends Plugin {
 			name: "Set asset",
 			callback: () =>
 				this.withTask("Set the asset on which task?", (task) => {
-					new SetAssetModal(this.app, task, this.assets, () => this.refreshViews()).open();
+					new SetAssetModal(this.app, task, this.settings, this.assets, () =>
+						this.refreshViews(),
+					).open();
 				}),
+		});
+
+		this.addCommand({
+			id: "create-asset",
+			name: "Create asset note",
+			// Reachable without a task in hand, so an inventory can be stocked up
+			// front rather than one chore at a time. Unlike the + inside the asset
+			// picker this opens the note, because here there is nothing else to
+			// do with it and nothing in front of it.
+			callback: () => {
+				new CreateAssetModal(this.app, {
+					folder: this.settings.assetFolder,
+					assets: this.assets,
+					onCreated: (file) => void this.app.workspace.getLeaf(false).openFile(file),
+				}).open();
+			},
 		});
 
 		this.addCommand({

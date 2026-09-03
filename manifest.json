@@ -1,7 +1,7 @@
 {
 	"id": "task-base",
 	"name": "Task Base",
-	"version": "0.3.2",
+	"version": "0.4.0",
 	"minAppVersion": "1.7.2",
 	"description": "Create and manage note-per-task records with RRULE recurrence, backed by a Bases task base.",
 	"author": "tteschon",

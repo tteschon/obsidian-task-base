@@ -82,6 +82,7 @@ recurring; empty means one-time.
 | Edit task | Change due date, priority, category, repeat rule or asset |
 | Edit repeat rule | Opens the RRULE builder on a task |
 | Set asset | Attaches, changes, or clears the asset on an existing task |
+| Create asset note | Creates a `type: asset` note and opens it — no task needed |
 | Recompute due date from repeat rule | Rolls `due` forward from `last done` |
 | Open task base | Opens the base file, creating one if there isn't one |
 | Open task list | The sidebar view |
@@ -115,6 +116,33 @@ The asset field is a type-ahead: click it and every asset drops down, typing
 narrows the list. A name with no matching note is still accepted — capturing a
 chore for something not yet inventoried is normal — but the field says so
 plainly rather than writing a dangling link in silence.
+
+**The field states that rule and the + beside it acts on it.** Where the list
+came from used to be answerable only by reading this file: an empty dropdown
+explained neither why it was empty nor what would fill it. The field now says
+what makes a note an asset, and the button creates one without leaving the form
+— the new note appears in the list straight away, and its name drops into the
+field you were filling in.
+
+New asset notes go to the **New asset folder** setting, and carry exactly two
+properties:
+
+```yaml
+---
+type: asset
+created: 2026-09-03
+---
+```
+
+That is the whole contract. `type: asset` is what puts the note in the picker;
+`created` matches what tasks carry and is a real date, so it sorts. Nothing
+else is written, because a lawn mower is described with fields no task plugin
+can guess — model numbers, warranty dates, where it lives — and those are yours
+to add.
+
+The folder is only consulted when *writing* one. Assets are still found
+anywhere in the vault by their property, so moving a note out of that folder
+does not stop it being an asset.
 
 ## Completing a task
 
@@ -164,7 +192,8 @@ completion date makes `INTERVAL` step from there, so an oil change on
 
 - **Delete a note.** Sweeping finished one-time tasks is deliberately out of
   scope. The sidebar surfaces recurring tasks stuck at `done: true`, and
-  unreadable repeat rules, but only ever reports them.
+  unreadable repeat rules, and the generated base carries a `Sweep` view of
+  finished one-time tasks - but all three only ever report.
 - **Write `.obsidian/types.json`.** The property-type registry is vault-wide;
   a stray write there breaks date sorting on every note at once.
 - **Write to a Kanban board or any hand-maintained table.** Frontmatter is the
@@ -233,9 +262,12 @@ and lets each vault run a different version.
 
 The plugin finds tasks by `type: task` **anywhere in the vault**, so the
 defaults — which describe one particular vault — are usually wrong somewhere
-else. Three settings matter:
+else. Four settings matter:
 
 - **New task folder** — where new notes land. Created if missing.
+- **New asset folder** — where the **+** beside the asset field writes new
+  asset notes. Created if missing, and matched to a folder that already exists
+  under a different capitalisation rather than colliding with it.
 - **Excluded folders** — any folder whose notes carry `type: task` for an
   unrelated reason. This is the one that bites: a vault with Kanban cards or
   another `type: task` convention will otherwise list them in the pane's count
@@ -306,7 +338,10 @@ src/
   rruleCompat.ts             CJS/ESM interop shim for the rrule package
   model/frontmatter.ts       pure text: note rendering, YAML normalisation
   model/assetLink.ts         pure text: asset wikilink <-> bare name
+  model/completion.ts        pure: the branch completing a task takes
   model/task.ts              the field contract, read + write
+  model/asset.ts             write an asset note
+  model/note.ts              placing a new note: folder, casing, name collisions
   model/taskRepository.ts    find and bucket tasks
   model/assetRepository.ts   find asset notes
   settingsData.ts            pure: settings shape, defaults, migration
@@ -331,7 +366,7 @@ would rewrite someone's note body.
 npm install
 echo "$HOME/path/to/YourVault/.obsidian/plugins/task-base" > .vault-plugin-dir
 npm run dev     # watch build, writes straight into the vault plugin folder
-npm test        # node:test over recurrence, frontmatter, asset links, settings
+npm test        # node:test over recurrence, completion, frontmatter, asset links, settings
 npm run lint    # eslint
 npm run build   # typecheck + minified build to the repo root, for release
 ```

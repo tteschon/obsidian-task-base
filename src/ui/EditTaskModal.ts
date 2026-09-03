@@ -5,7 +5,7 @@ import { PRIORITIES, type Priority, type Task, type TaskPatch, writeTask } from 
 import { assetNameFromLink, formatAssetLink } from "../model/assetLink";
 import type { AssetRepository } from "../model/assetRepository";
 import { describeFrequency } from "../recurrence";
-import { AssetSuggest } from "./AssetSuggest";
+import { addAssetField } from "./AssetField";
 import { FrequencyModal } from "./FrequencyModal";
 
 /**
@@ -22,7 +22,6 @@ export class EditTaskModal extends Modal {
 	private frequency: string | null;
 	private assetName: string;
 	private frequencyEl!: HTMLElement;
-	private assetHintEl!: HTMLElement;
 
 	constructor(
 		app: App,
@@ -81,39 +80,20 @@ export class EditTaskModal extends Modal {
 		this.frequencyEl = freqSetting.descEl;
 		this.renderFrequency();
 
-		const assetSetting = new Setting(contentEl)
-			.setName("Asset")
-			.setDesc("The note this task services. Click the field to see every asset.");
-		this.assetHintEl = assetSetting.descEl.createDiv({ cls: "task-base-hint" });
-		assetSetting.addText((t) => {
-			t.setValue(this.assetName);
-			t.onChange((v) => this.setAsset(v));
-			new AssetSuggest(this.app, t.inputEl, this.assets, (picked) => {
-				t.setValue(picked);
-				this.setAsset(picked);
-			});
+		addAssetField(contentEl, {
+			app: this.app,
+			assets: this.assets,
+			assetFolder: () => this.settings.assetFolder,
+			desc: "The note this task services.",
+			initial: this.assetName,
+			onChange: (name) => (this.assetName = name),
 		});
-		this.renderAssetHint();
 
 		const buttons = contentEl.createDiv({ cls: "task-base-buttons" });
 		buttons.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
 		buttons
 			.createEl("button", { text: "Save", cls: "mod-cta" })
 			.addEventListener("click", () => void this.submit());
-	}
-
-	private setAsset(value: string): void {
-		this.assetName = value;
-		this.renderAssetHint();
-	}
-
-	private renderAssetHint(): void {
-		const name = assetNameFromLink(this.assetName);
-		this.assetHintEl.setText(
-			!name || this.assets.findByName(name)
-				? ""
-				: `No asset note named "${name}" — the link will be unresolved.`,
-		);
 	}
 
 	private renderFrequency(): void {

@@ -96,3 +96,25 @@ export function appendLogLine(
 	const rest = content.slice(insertAt).replace(/^\n+/, "");
 	return `${content.slice(0, insertAt)}\n\n${entry}\n${rest}`;
 }
+
+export interface AssetNoteFields {
+	/** Capture date, written bare so Bases treats it as a date, as on tasks. */
+	created: ISODate;
+	body: string;
+}
+
+/**
+ * Render a new asset note.
+ *
+ * Deliberately two properties and no more. `type: asset` is the whole identity
+ * rule — it is what puts the note in the task form's asset picker — and
+ * `created` matches what task notes carry, registered vault-wide as a real
+ * date. Anything further would be this plugin imposing a schema on notes it
+ * does not own: an asset is whatever the vault already says it is, and people
+ * describe a lawn mower with fields no task plugin can guess.
+ */
+export function renderAssetNote(fields: AssetNoteFields): string {
+	const lines = ["---", "type: asset", `created: ${fields.created}`, "---", ""];
+	if (fields.body.trim()) lines.push("", fields.body.trim(), "");
+	return lines.join("\n");
+}

@@ -3,9 +3,9 @@ import type { TaskBaseSettings } from "../settings";
 import { type ISODate, todayISO } from "../dates";
 import { PRIORITIES, type Priority, createTask, sanitizeFileName } from "../model/task";
 import { describeFrequency, nextDue } from "../recurrence";
-import { assetNameFromLink, formatAssetLink } from "../model/assetLink";
+import { formatAssetLink } from "../model/assetLink";
 import type { AssetRepository } from "../model/assetRepository";
-import { AssetSuggest } from "./AssetSuggest";
+import { addAssetField } from "./AssetField";
 import { FrequencyModal } from "./FrequencyModal";
 
 /** Capture a task: name, category, priority, due date, recurrence, asset. */
@@ -15,11 +15,11 @@ export class CreateTaskModal extends Modal {
 	private priority: Priority;
 	private due: ISODate | null = null;
 	private frequency: string | null = null;
-	private asset: string | null = null;
+	/** The bare asset name; `formatAssetLink` turns it into a link at submit. */
+	private assetName = "";
 	private body = "";
 	private frequencyEl!: HTMLElement;
 	private dueInput!: HTMLInputElement;
-	private assetHintEl!: HTMLElement;
 
 	constructor(
 		app: App,
@@ -87,17 +87,12 @@ export class CreateTaskModal extends Modal {
 		this.frequencyEl = freqSetting.descEl;
 		this.renderFrequency();
 
-		const assetSetting = new Setting(contentEl)
-			.setName("Asset")
-			.setDesc("Optional note this task services. Click the field to see every asset.");
-		this.assetHintEl = assetSetting.descEl.createDiv({ cls: "task-base-hint" });
-		assetSetting.addText((t) => {
-			t.setPlaceholder("Family car");
-			t.onChange((v) => this.setAsset(v));
-			new AssetSuggest(this.app, t.inputEl, this.assets, (name) => {
-				t.setValue(name);
-				this.setAsset(name);
-			});
+		addAssetField(contentEl, {
+			app: this.app,
+			assets: this.assets,
+			assetFolder: () => this.settings.assetFolder,
+			desc: "Optional note this task services.",
+			onChange: (name) => (this.assetName = name),
 		});
 
 		// Stacked rather than squeezed into a Setting's narrow control column —
@@ -119,25 +114,6 @@ export class CreateTaskModal extends Modal {
 			.addEventListener("click", () => void this.submit());
 	}
 
-	/**
-	 * Record the asset and say plainly when the name matches no note.
-	 *
-	 * The task is still created either way — capturing a chore for something
-	 * not yet inventoried is a normal thing to do, and Obsidian treats the
-	 * result as an unresolved link you can fill in later. What is not normal is
-	 * a typo you never find out about, which is what the old free-text field
-	 * produced.
-	 */
-	private setAsset(raw: string): void {
-		this.asset = formatAssetLink(raw);
-		const name = assetNameFromLink(raw);
-		if (!name || this.assets.findByName(name)) {
-			this.assetHintEl.setText("");
-			return;
-		}
-		this.assetHintEl.setText(`No asset note named "${name}" — the link will be unresolved.`);
-	}
-
 	private renderFrequency(): void {
 		this.frequencyEl.setText(
 			this.frequency ? `${describeFrequency(this.frequency)} — ${this.frequency}` : "Does not repeat",
@@ -157,7 +133,7 @@ export class CreateTaskModal extends Modal {
 				category: this.category,
 				due: this.due,
 				frequency: this.frequency,
-				asset: this.asset,
+				asset: formatAssetLink(this.assetName),
 				body: this.body,
 				createdOn: todayISO(),
 			});

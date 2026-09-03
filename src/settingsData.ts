@@ -14,6 +14,14 @@ export interface TaskBaseSettings {
 	/** Where new task notes are created. */
 	taskFolder: string;
 	/**
+	 * Where new asset notes are created.
+	 *
+	 * Only ever consulted when *writing* one. Assets are found by their `type`
+	 * property from anywhere in the vault, so moving a note out of this folder
+	 * does not stop it being an asset — see `model/assetRepository.ts`.
+	 */
+	assetFolder: string;
+	/**
 	 * Folders whose notes are ignored even when they carry `type: task`.
 	 *
 	 * A vault may hold notes that use the property for something else — Kanban
@@ -34,6 +42,9 @@ export interface TaskBaseSettings {
 
 export const DEFAULT_SETTINGS: TaskBaseSettings = {
 	taskFolder: "tasks",
+	// Not "assets": vaults conventionally keep images and attachments there,
+	// and asset notes landing among them would be the wrong kind of surprise.
+	assetFolder: "inventory",
 	excludedFolders: ["Templates"],
 	categories: ["home", "yard", "errands", "vehicle", "health"],
 	defaultPriority: "low",
@@ -127,6 +138,12 @@ export const SETTING_SPECS: readonly SettingSpec[] = [
 		name: "New task folder",
 		desc: "Where the create command puts new task notes.",
 		type: { kind: "text", placeholder: "tasks" },
+	},
+	{
+		key: "assetFolder",
+		name: "New asset folder",
+		desc: "Where the + beside the Asset field puts new asset notes. Only used when creating one — existing assets are found anywhere in the vault by their type: asset property, never by folder.",
+		type: { kind: "text", placeholder: "inventory" },
 	},
 	{
 		key: "excludedFolders",

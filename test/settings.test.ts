@@ -128,3 +128,20 @@ test("an empty list, or empty entries, exclude nothing", () => {
 	// An empty entry must never match everything — that would empty the pane.
 	assert.equal(isInExcludedFolder("tasks/anything.md", ["", "  "]), false);
 });
+
+test("settings saved before the asset folder existed pick up the default", () => {
+	// The upgrade path for every vault that already had this plugin: no
+	// assetFolder in data.json, and the + beside the asset field needs somewhere
+	// to write. An empty value would mean the vault root, which is not the same
+	// thing as absent.
+	const migrated = migrateSettings({ taskFolder: "tasks", excludedFolders: ["Templates"] });
+	assert.equal(migrated.assetFolder, DEFAULT_SETTINGS.assetFolder);
+	assert.ok(migrated.assetFolder, "an absent setting must not become the vault root");
+});
+
+test("an asset folder that was set is kept, including an explicit empty one", () => {
+	assert.equal(migrateSettings({ assetFolder: "gear/owned" }).assetFolder, "gear/owned");
+	// "" is a deliberate choice — write assets to the vault root — and must not
+	// be overwritten by the default the way an absent key is.
+	assert.equal(migrateSettings({ assetFolder: "" }).assetFolder, "");
+});

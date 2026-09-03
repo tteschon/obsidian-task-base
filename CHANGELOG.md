@@ -4,6 +4,46 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-09-03
+
+### Added
+
+- **Create an asset note without leaving the task form.** The asset field now
+  carries a **+** beside it, in all three places assets are picked — Create
+  task, Edit task and Set asset — plus a **Create asset note** command for
+  stocking an inventory up front. The new note appears in the picker straight
+  away and its name drops into the field you were filling in.
+- The asset field now states **what makes a note an asset** — the `type: asset`
+  property — where the field is, rather than only in the README. Where that
+  list came from was unanswerable from the UI: an empty dropdown explained
+  neither why it was empty nor what would fill it, and it now says so and
+  points at the button that fixes it.
+- **New asset folder** setting, deciding where new asset notes are written.
+  Only consulted when writing one: assets are still found anywhere in the vault
+  by their property, never by folder.
+- `model/completion.ts` holds the branch a completion takes, moved out of the
+  modal so it can be tested without the Obsidian API. One of its outcomes
+  retires a schedule, which is not something to leave uncovered.
+- A `Sweep` view on the generated base, listing finished one-time tasks. It
+  reports; nothing here deletes.
+
+### Fixed
+
+- The generated base listed neither of the formulas it defines, so
+  `days_until_due` and `overdue` were computed by nothing and readable by
+  nothing. `Table` now lists both, and a test fails if a future formula is
+  defined without a view naming it.
+- Creating a note in a folder whose capitalisation differed from the setting
+  failed with `Folder already exists` — thrown for a folder Obsidian's own
+  lookup had just reported absent, because that lookup is case-sensitive while
+  macOS and Windows are not. A task folder set to `tasks` in a vault holding
+  `Tasks` could not create a task at all. Folder and file names are now matched
+  the way the filesystem matches them.
+- A note created by the plugin is now waited on until the metadata cache has
+  caught up. Without that wait a note read back as though it were not the kind
+  of note it had just been written as — so a new asset was missing from the
+  picker it was created for, and the field reported the link as unresolved.
+
 ## [0.3.2] — 2026-09-02
 
 ### Changed

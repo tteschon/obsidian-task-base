@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
 	appendLogLine,
 	normalizeEmptyKeysIn,
+	renderAssetNote,
 	renderTaskNote,
 	sanitizeFileName,
 } from "../src/model/frontmatter";
@@ -131,4 +132,41 @@ test("a missing log heading is created rather than skipped", () => {
 	const after = appendLogLine("---\ntype: task\n---\n", "did the thing", "Service log", "2026-08-31");
 	assert.match(after, /^## Service log$/m);
 	assert.match(after, /^- 2026-08-31 - did the thing$/m);
+});
+
+test("a new asset note carries the property that makes it an asset", () => {
+	// This is the whole contract with assetRepository.ts: a note it created must
+	// come back out of the picker it was created for.
+	const note = renderAssetNote({ created: "2026-09-03", body: "" });
+	assert.match(note, /^type: asset$/m);
+});
+
+test("an asset's created date is bare, so Bases reads it as a date", () => {
+	// Quoted, it is a string: date sorting silently falls back to text order and
+	// nothing reports it — the same trap `due` has on tasks.
+	const note = renderAssetNote({ created: "2026-09-03", body: "" });
+	assert.match(note, /^created: 2026-09-03$/m);
+	assert.doesNotMatch(note, /created: ['"]/);
+});
+
+test("an asset note carries nothing this plugin does not own", () => {
+	// A lawn mower is described with fields no task plugin can guess. Stamping
+	// priority or category onto someone's inventory note would be this plugin
+	// imposing a schema on notes that are not its own.
+	const frontmatter = renderAssetNote({ created: "2026-09-03", body: "" }).split("---")[1];
+	assert.deepEqual(
+		frontmatter.trim().split("\n").map((line) => line.split(":")[0]),
+		["type", "created"],
+	);
+});
+
+test("asset notes are valid frontmatter with and without a body", () => {
+	const empty = renderAssetNote({ created: "2026-09-03", body: "   " });
+	assert.ok(empty.startsWith("---\n"), "frontmatter must open the file");
+	assert.equal((empty.match(/^---$/gm) ?? []).length, 2, "exactly one delimiter pair");
+	assert.doesNotMatch(empty, /\s{2}$/, "whitespace-only notes must not become a body");
+
+	const withBody = renderAssetNote({ created: "2026-09-03", body: "  Serial 4471-B  " });
+	assert.match(withBody, /^Serial 4471-B$/m, "the body is trimmed, not padded");
+	assert.equal((withBody.match(/^---$/gm) ?? []).length, 2);
 });
