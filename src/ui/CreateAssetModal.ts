@@ -5,6 +5,7 @@ import type { AssetRepository } from "../model/assetRepository";
 import { metadataSettled } from "../model/metadata";
 import { sanitizeFileName } from "../model/frontmatter";
 import { findFolder } from "../model/note";
+import { addNotesField } from "./NotesField";
 
 export interface CreateAssetSpec {
 	/** Where the note is written. Empty means the vault root. */
@@ -68,15 +69,11 @@ export class CreateAssetModal extends Modal {
 			});
 		});
 
-		new Setting(contentEl)
-			.setName("Notes")
-			.setClass("task-base-notes")
-			.addTextArea((t) => {
-				t.setPlaceholder("Model, serial number, where it lives — anything worth keeping.").onChange(
-					(v) => (this.body = v),
-				);
-				t.inputEl.rows = 5;
-			});
+		addNotesField(contentEl, {
+			app: this.app,
+			placeholder: "Model, serial number, where it lives — anything worth keeping.",
+			onChange: (body) => (this.body = body),
+		});
 
 		const buttons = contentEl.createDiv({ cls: "task-base-buttons" });
 		buttons.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());

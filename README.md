@@ -101,6 +101,30 @@ counts it. `Later` is collapsed by default, with its count on the header.
 Commands act on the active note when it is a task, and offer a picker when it
 is not.
 
+## Notes, and the phone keyboard
+
+Both create forms end in a **Notes** box that becomes the note's body. On a
+phone that was the one field you could not see while typing into it: the form
+is taller than the screen long before the box is reached, so tapping it leaves
+the box at the bottom of the view with the on-screen keyboard over it.
+
+So on a phone the box is not there. In its place is a one-line button carrying
+the opening of what you wrote, and tapping it opens an editor holding **one
+field and its heading** — the top of the screen, which is the half the keyboard
+leaves alone. Collapsing the box lifts every field above it back into view as
+well, which is the same complaint from the other end.
+
+On a tablet or a desktop the inline box stays, with an expand button beside it
+opening that same editor for anything longer than a line.
+
+The editor writes nothing to the vault: it edits the field, and the form still
+has to be submitted. It commits as you type rather than on **Done**, because
+Escape, a tap outside it, and the Android back gesture all dismiss a modal, and
+losing a paragraph to any of the three is not a trade worth making.
+
+Editing the body of a task that already exists is still a matter of opening the
+note — **Edit task** changes properties, not prose.
+
 ## Assets
 
 A task's `asset` property links the note for the thing being serviced —

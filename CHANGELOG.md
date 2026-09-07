@@ -4,6 +4,24 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **The notes field can be edited in a window of its own**, in both Create task
+  and Create asset. On a phone the inline box is replaced outright by a
+  one-line button opening that editor: the notes box is the last field of a
+  form already taller than the screen, so tapping it put the box under the
+  on-screen keyboard and you typed into a field you could not see. An editor
+  holding one field puts it at the top of the screen instead, and collapsing
+  the box lifts the fields above it back into view too. On a tablet or a
+  desktop the box stays, with an expand button beside it.
+
+  The editor commits as you type rather than on **Done** — Escape, a tap
+  outside, and the Android back gesture all dismiss a modal, and none of them
+  should cost a paragraph. Nothing reaches the vault until the form itself is
+  submitted, as before.
+
 ## [0.4.0] — 2026-09-03
 
 ### Added
