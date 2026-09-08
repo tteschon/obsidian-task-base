@@ -4,7 +4,8 @@ import { type TaskBaseSettings, migrateSettings } from "./settingsData";
 import { TaskRepository } from "./model/taskRepository";
 import { defaultBasePath, renderTaskBase } from "./model/baseFile";
 import { AssetRepository } from "./model/assetRepository";
-import { type Task, hasCorruptDate, readTask, writeTask } from "./model/task";
+import { type Task, hasCorruptDate, readBody, readTask, writeTask } from "./model/task";
+import type { BodyParts } from "./model/frontmatter";
 import { isRecurring, nextDue } from "./recurrence";
 import { todayISO } from "./dates";
 import { CreateAssetModal } from "./ui/CreateAssetModal";
@@ -249,10 +250,31 @@ export default class TaskBasePlugin extends Plugin {
 		}).open();
 	}
 
-	/** Shared by the "Edit task" command and the task pane's context menu. */
-	openEditTaskModal(task: Task): void {
-		new EditTaskModal(this.app, task, this.settings, this.repository.categories(), this.assets, () =>
-			this.refreshViews(),
+	/**
+	 * Shared by the "Edit task" command and the task pane's context menu.
+	 *
+	 * The body is read before the modal opens rather than loaded into it after.
+	 * A notes box that fills in a frame or two late is a box you can be typing
+	 * into when it does, and the read is off Obsidian's cache.
+	 */
+	async openEditTaskModal(task: Task): Promise<void> {
+		let body: BodyParts;
+		try {
+			body = await readBody(this.app, task.file, this.settings.logHeading);
+		} catch (e) {
+			// Worth saying rather than opening a notes box that silently claims
+			// the note is empty and offers to save that over it.
+			new Notice(`Could not read the note body: ${e instanceof Error ? e.message : String(e)}`);
+			return;
+		}
+		new EditTaskModal(
+			this.app,
+			task,
+			body,
+			this.settings,
+			this.repository.categories(),
+			this.assets,
+			() => this.refreshViews(),
 		).open();
 	}
 

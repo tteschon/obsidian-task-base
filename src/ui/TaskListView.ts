@@ -315,7 +315,7 @@ export class TaskListView extends ItemView {
 			i
 				.setTitle("Edit task")
 				.setIcon("pencil")
-				.onClick(() => this.plugin.openEditTaskModal(task)),
+				.onClick(() => void this.plugin.openEditTaskModal(task)),
 		);
 		menu.addItem((i) =>
 			i

@@ -2,10 +2,14 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import {
 	appendLogLine,
+	bodyOf,
+	joinBody,
 	normalizeEmptyKeysIn,
 	renderAssetNote,
 	renderTaskNote,
 	sanitizeFileName,
+	splitBody,
+	withBody,
 } from "../src/model/frontmatter";
 
 const note = (fm: string, body = "\nSome body text.\n") => `---\n${fm}\n---\n${body}`;
@@ -169,4 +173,92 @@ test("asset notes are valid frontmatter with and without a body", () => {
 	const withBody = renderAssetNote({ created: "2026-09-03", body: "  Serial 4471-B  " });
 	assert.match(withBody, /^Serial 4471-B$/m, "the body is trimmed, not padded");
 	assert.equal((withBody.match(/^---$/gm) ?? []).length, 2);
+});
+
+const task = (body: string) =>
+	`---\ndone: false\ndue: 2026-09-07\nfrequency:\ntype: task\n---\n${body}`;
+
+test("the body is everything below the frontmatter", () => {
+	assert.equal(bodyOf(task("\nFilter model HDX FMM-2\n")), "\nFilter model HDX FMM-2\n");
+});
+
+test("a note with no frontmatter is all body", () => {
+	assert.equal(bodyOf("Just prose.\n"), "Just prose.\n");
+});
+
+test("a rule in the body is not mistaken for the frontmatter's end", () => {
+	// bodyOf scans for the *first* closing delimiter, which is the real one;
+	// the note's own --- comes later and stays in the body where it belongs.
+	const body = "\nBefore.\n\n---\n\nAfter.\n";
+	assert.equal(bodyOf(task(body)), body);
+	assert.equal(bodyOf(withBody(task(body), "Before.\n\n---\n\nAfter.")), "\nBefore.\n\n---\n\nAfter.\n");
+});
+
+test("replacing the body leaves the properties byte-identical", () => {
+	// The bare `frequency:` is the one that matters: reserialising it as
+	// `frequency: ''` would make a one-time task match the base's
+	// `frequency != null` filter and quietly return the wrong rows.
+	const before = task("\nOld prose.\n");
+	const after = withBody(before, "New prose.");
+	assert.equal(after.slice(0, after.indexOf("\n---\n") + 5), before.slice(0, before.indexOf("\n---\n") + 5));
+	assert.match(after, /^frequency:$/m);
+	assert.match(after, /New prose\./);
+	assert.doesNotMatch(after, /Old prose/);
+});
+
+test("emptying the body leaves the frontmatter and nothing else", () => {
+	assert.equal(withBody(task("\nOld prose.\n"), "   \n  "), task(""));
+});
+
+test("the completion log is split off from the prose", () => {
+	const body = "Filter model HDX FMM-2\n\n## Service log\n\n- 2026-09-01 - 22,731 mi\n";
+	const parts = splitBody(body, "Service log");
+	assert.equal(parts.notes, "Filter model HDX FMM-2");
+	assert.equal(parts.log, "## Service log\n\n- 2026-09-01 - 22,731 mi");
+});
+
+test("a body with no log is all prose", () => {
+	assert.deepEqual(splitBody("Just prose.\n", "Service log"), {
+		notes: "Just prose.",
+		log: "",
+	});
+});
+
+test("the heading is matched the way appendLogLine writes it, whatever its case", () => {
+	assert.equal(splitBody("Prose.\n\n## SERVICE LOG\n\n- x\n", "Service log").notes, "Prose.");
+	assert.equal(splitBody("Prose.\n\n## Maintenance\n\n- x\n", "Maintenance").notes, "Prose.");
+	// A log written under a heading the setting no longer names reads as prose.
+	assert.equal(splitBody("Prose.\n\n## Service log\n\n- x\n", "Maintenance").log, "");
+});
+
+test("a log with no prose above it survives the round trip", () => {
+	const body = "## Service log\n\n- 2026-09-01 - 22,731 mi";
+	assert.equal(joinBody(splitBody(body, "Service log")), body);
+});
+
+test("editing the prose carries the log across untouched", () => {
+	const parts = splitBody("Old.\n\n## Service log\n\n- 2026-09-01 - 22,731 mi\n", "Service log");
+	assert.equal(
+		joinBody({ notes: "New.", log: parts.log }),
+		"New.\n\n## Service log\n\n- 2026-09-01 - 22,731 mi",
+	);
+});
+
+test("clearing the prose does not take the log with it", () => {
+	const parts = splitBody("Old.\n\n## Service log\n\n- 2026-09-01 - 22,731 mi\n", "Service log");
+	assert.equal(joinBody({ notes: "", log: parts.log }), parts.log);
+});
+
+test("a log appended while the edit form was open survives the save", () => {
+	// The composition writeBody performs: the log is re-read from the file at
+	// the moment of writing, so a completion logged since the form opened is
+	// still there afterwards. Putting back the log the form was opened on
+	// would drop that entry silently.
+	const onDisk = task("\nOld.\n\n## Service log\n\n- 2026-09-01 - 22,731 mi\n- 2026-09-08 - 23,104 mi\n");
+	const { log } = splitBody(bodyOf(onDisk), "Service log");
+	const saved = withBody(onDisk, joinBody({ notes: "New.", log }));
+	assert.match(saved, /- 2026-09-01 - 22,731 mi/);
+	assert.match(saved, /- 2026-09-08 - 23,104 mi/);
+	assert.match(saved, /^New\.$/m);
+	assert.doesNotMatch(saved, /Old\./);
 });

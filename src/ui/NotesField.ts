@@ -5,6 +5,10 @@ import { notesPreview } from "./notesPreview";
 export interface NotesFieldSpec {
 	app: App;
 	placeholder: string;
+	/** Said under the label, where the row needs explaining. */
+	desc?: string;
+	/** The body already on the note, for a form that edits one. */
+	initial?: string;
 	/** The body text, as it changes. */
 	onChange: (body: string) => void;
 }
@@ -28,8 +32,9 @@ const NAME = "Notes";
  * complaint from the other end.
  */
 export function addNotesField(parent: HTMLElement, spec: NotesFieldSpec): void {
-	let body = "";
+	let body = spec.initial ?? "";
 	const setting = new Setting(parent).setName(NAME).setClass("task-base-notes");
+	if (spec.desc) setting.setDesc(spec.desc);
 
 	/** Open the expanded editor, keeping `render` in step as it is typed into. */
 	const expand = (render: (value: string) => void) => {
@@ -60,10 +65,12 @@ export function addNotesField(parent: HTMLElement, spec: NotesFieldSpec): void {
 	let area: TextAreaComponent | null = null;
 	setting.addTextArea((t) => {
 		area = t;
-		t.setPlaceholder(spec.placeholder).onChange((value) => {
-			body = value;
-			spec.onChange(value);
-		});
+		t.setPlaceholder(spec.placeholder)
+			.setValue(body)
+			.onChange((value) => {
+				body = value;
+				spec.onChange(value);
+			});
 	});
 	setting.addExtraButton((b) =>
 		b

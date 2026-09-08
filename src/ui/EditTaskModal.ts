@@ -1,11 +1,22 @@
 import { type App, Modal, Notice, Setting } from "obsidian";
 import type { TaskBaseSettings } from "../settingsData";
 import { type ISODate, parseISO } from "../dates";
-import { PRIORITIES, type Priority, type Task, type TaskPatch, writeTask } from "../model/task";
+import {
+	PRIORITIES,
+	type Priority,
+	type Task,
+	type TaskPatch,
+	sanitizeFileName,
+	writeBody,
+	writeTask,
+} from "../model/task";
+import type { BodyParts } from "../model/frontmatter";
+import { renameNote } from "../model/note";
 import { assetNameFromLink, formatAssetLink } from "../model/assetLink";
 import type { AssetRepository } from "../model/assetRepository";
 import { describeFrequency } from "../recurrence";
 import { addAssetField } from "./AssetField";
+import { addNotesField } from "./NotesField";
 import { FrequencyModal } from "./FrequencyModal";
 
 /**
@@ -13,36 +24,54 @@ import { FrequencyModal } from "./FrequencyModal";
  *
  * Everything the create modal offers, reachable after the fact — until this
  * existed, changing a due date meant editing frontmatter by hand, which is the
- * thing the plugin is for.
+ * thing the plugin is for. That now includes the two things a task note holds
+ * outside its properties: its **name**, which is the file name, and its
+ * **notes**, which are the body above the completion log.
  */
 export class EditTaskModal extends Modal {
+	private name: string;
 	private due: ISODate | null;
 	private priority: Priority;
 	private category: string | null;
 	private frequency: string | null;
 	private assetName: string;
+	private notes: string;
 	private frequencyEl!: HTMLElement;
 
 	constructor(
 		app: App,
 		private task: Task,
+		/** Read before opening, so the notes box is filled from its first frame. */
+		private body: BodyParts,
 		private settings: TaskBaseSettings,
 		private knownCategories: string[],
 		private assets: AssetRepository,
 		private onSaved: () => void,
 	) {
 		super(app);
+		this.name = task.name;
 		this.due = task.due;
 		this.priority = task.priority;
 		this.category = task.category;
 		this.frequency = task.frequency;
 		this.assetName = assetNameFromLink(task.asset) ?? "";
+		this.notes = body.notes;
 	}
 
 	onOpen(): void {
 		const { contentEl } = this;
 		contentEl.addClass("task-base-modal");
 		contentEl.createEl("h3", { text: `Edit "${this.task.name}"` });
+
+		new Setting(contentEl)
+			.setName("Name")
+			.setDesc("Renames the note. Links pointing at it are updated.")
+			.addText((t) => {
+				t.setValue(this.name).onChange((v) => (this.name = v));
+				t.inputEl.addEventListener("keydown", (e) => {
+					if (e.key === "Enter") void this.submit();
+				});
+			});
 
 		new Setting(contentEl)
 			.setName("Due")
@@ -89,6 +118,16 @@ export class EditTaskModal extends Modal {
 			onChange: (name) => (this.assetName = name),
 		});
 
+		addNotesField(contentEl, {
+			app: this.app,
+			placeholder: "Anything worth remembering in the note body.",
+			desc: this.body.log
+				? `The body above "## ${this.settings.logHeading}". The log below it is left alone.`
+				: undefined,
+			initial: this.notes,
+			onChange: (notes) => (this.notes = notes),
+		});
+
 		const buttons = contentEl.createDiv({ cls: "task-base-buttons" });
 		buttons.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
 		buttons
@@ -107,9 +146,22 @@ export class EditTaskModal extends Modal {
 	 *
 	 * Opening this modal and saving without touching anything must leave the
 	 * file byte-identical — otherwise it would stamp keys onto notes that never
-	 * carried them, and rewrite `due` on every task it was ever opened on.
+	 * carried them, rewrite `due` on every task it was ever opened on, and
+	 * reflow the body of every note it was ever pointed at.
+	 *
+	 * The rename goes last, and reports separately. It is the only step that
+	 * can fail on something the form cannot see coming — a sibling note already
+	 * holding the name — and running it after the writes means that failure
+	 * costs the rename it names rather than the edits it says nothing about.
+	 * The modal stays open on it, because the field that needs correcting is
+	 * the one already in front of you.
 	 */
 	private async submit(): Promise<void> {
+		const name = sanitizeFileName(this.name);
+		if (!name) {
+			new Notice("A task needs a name.");
+			return;
+		}
 		if (this.due !== null && !parseISO(this.due)) {
 			new Notice("That due date is not a real date.");
 			return;
@@ -123,20 +175,43 @@ export class EditTaskModal extends Modal {
 		if (this.frequency !== this.task.frequency) patch.frequency = this.frequency;
 		if (asset !== this.task.asset) patch.asset = asset;
 
-		const changed = Object.keys(patch);
+		const properties = Object.keys(patch);
+		const notesChanged = this.notes.trim() !== this.body.notes.trim();
+		const renamed = name !== this.task.name;
+
+		const changed = [...properties];
+		if (notesChanged) changed.push("notes");
+		if (renamed) changed.push("name");
 		if (!changed.length) {
 			this.close();
 			return;
 		}
 
 		try {
-			await writeTask(this.app, this.task.file, patch);
-			new Notice(`${this.task.name} — updated ${changed.join(", ")}`);
-			this.onSaved();
-			this.close();
+			if (properties.length) await writeTask(this.app, this.task.file, patch);
+			if (notesChanged) {
+				await writeBody(this.app, this.task.file, this.notes, this.settings.logHeading);
+			}
 		} catch (e) {
 			new Notice(`Could not save: ${e instanceof Error ? e.message : String(e)}`);
+			return;
 		}
+
+		if (renamed) {
+			try {
+				await renameNote(this.app, this.task.file, name);
+			} catch (e) {
+				// Everything above this line is already on disk. Saying only
+				// "could not save" would read as having lost it.
+				new Notice(`Saved, but not renamed: ${e instanceof Error ? e.message : String(e)}`);
+				this.onSaved();
+				return;
+			}
+		}
+
+		new Notice(`${name} — updated ${changed.join(", ")}`);
+		this.onSaved();
+		this.close();
 	}
 
 	onClose(): void {
