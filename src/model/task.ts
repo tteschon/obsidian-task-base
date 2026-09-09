@@ -6,6 +6,7 @@ import {
 	type Priority,
 	appendLogLine,
 	bodyOf,
+	hasReadableFrontmatter,
 	joinBody,
 	normalizeEmptyKeysIn,
 	renderTaskNote,
@@ -218,7 +219,14 @@ export function createTask(app: App, spec: NewTask): Promise<TFile> {
  * cache is what the rest of the plugin is already looking at.
  */
 export async function readBody(app: App, file: TFile, logHeading: string): Promise<BodyParts> {
-	return splitBody(bodyOf(await app.vault.cachedRead(file)), logHeading);
+	const content = await app.vault.cachedRead(file);
+	// Refused here rather than at the save, which is the same refusal a few
+	// minutes later and an edit worse: the form would otherwise open with the
+	// frontmatter sitting in the notes box as if it were prose.
+	if (!hasReadableFrontmatter(content)) {
+		throw new Error("The note's frontmatter could not be found.");
+	}
+	return splitBody(bodyOf(content), logHeading);
 }
 
 /**

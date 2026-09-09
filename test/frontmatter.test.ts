@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
 	appendLogLine,
 	bodyOf,
+	hasReadableFrontmatter,
 	joinBody,
 	normalizeEmptyKeysIn,
 	renderAssetNote,
@@ -261,4 +262,31 @@ test("a log appended while the edit form was open survives the save", () => {
 	assert.match(saved, /- 2026-09-08 - 23,104 mi/);
 	assert.match(saved, /^New\.$/m);
 	assert.doesNotMatch(saved, /Old\./);
+});
+
+test("a note whose frontmatter the scan cannot find is not written over", () => {
+	// Both shapes reach withBody as "starts past byte 0 of the body", which is
+	// the guess that would put the prose where the properties are. A byte-order
+	// mark ahead of the delimiter, which Obsidian's own parser sees past:
+	const bom = `\ufeff${task("\nProse.\n")}`;
+	assert.equal(hasReadableFrontmatter(bom), false);
+	assert.throws(() => withBody(bom, "Edited."), /frontmatter could not be found/);
+	// And an opening delimiter whose closing one is not there — a note caught
+	// mid-write, which vault.process reads from disk rather than from the cache
+	// the task was read out of.
+	const unterminated = "---\ndone: false\ntype: task\n";
+	assert.equal(hasReadableFrontmatter(unterminated), false);
+	assert.throws(() => withBody(unterminated, "Edited."), /frontmatter could not be found/);
+});
+
+test("a note of pure prose is still all body to a reader", () => {
+	// bodyOf stays permissive where withBody refuses: reading a note without
+	// frontmatter is a note that has none, and costs nothing to get wrong.
+	assert.equal(hasReadableFrontmatter("Just prose.\n"), false);
+	assert.equal(bodyOf("Just prose.\n"), "Just prose.\n");
+});
+
+test("frontmatter the scan can find is written through as before", () => {
+	assert.equal(hasReadableFrontmatter(task("\nProse.\n")), true);
+	assert.match(withBody(task("\nProse.\n"), "Edited."), /^type: task$/m);
 });
