@@ -154,7 +154,11 @@ export class EditTaskModal extends Modal {
 	 * holding the name — and running it after the writes means that failure
 	 * costs the rename it names rather than the edits it says nothing about.
 	 * The modal stays open on it, because the field that needs correcting is
-	 * the one already in front of you.
+	 * the one already in front of you — which makes what was written a moment
+	 * ago the note's new starting point, so the writes above record themselves
+	 * before the rename is attempted. Without that, correcting the name and
+	 * saving again would rewrite properties that already hold those values and
+	 * name them in the notice as though they had just changed.
 	 */
 	private async submit(): Promise<void> {
 		const name = sanitizeFileName(this.name);
@@ -196,6 +200,21 @@ export class EditTaskModal extends Modal {
 			new Notice(`Could not save: ${e instanceof Error ? e.message : String(e)}`);
 			return;
 		}
+
+		// Both are replaced rather than mutated: `task` belongs to the caller,
+		// and the log is left as it was because nothing reads it after the form
+		// has been built.
+		if (properties.length) {
+			this.task = {
+				...this.task,
+				due: this.due,
+				priority: this.priority,
+				category: this.category,
+				frequency: this.frequency,
+				asset,
+			};
+		}
+		if (notesChanged) this.body = { ...this.body, notes: this.notes.trim() };
 
 		if (renamed) {
 			try {
