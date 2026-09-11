@@ -1,11 +1,17 @@
 import type { App, TFile } from "obsidian";
 import { type ISODate, parseISO, todayISO } from "../dates";
 import {
+	type BodyParts,
 	PRIORITIES,
 	type Priority,
 	appendLogLine,
+	bodyOf,
+	hasReadableFrontmatter,
+	joinBody,
 	normalizeEmptyKeysIn,
 	renderTaskNote,
+	splitBody,
+	withBody,
 } from "./frontmatter";
 import { createNote } from "./note";
 
@@ -203,6 +209,45 @@ export function createTask(app: App, spec: NewTask): Promise<TFile> {
 			asset: spec.asset,
 			body: spec.body,
 		}),
+	});
+}
+
+/**
+ * The note's prose and its completion log, read apart.
+ *
+ * A cached read, not `vault.read`: this is called to fill a form, and the
+ * cache is what the rest of the plugin is already looking at.
+ */
+export async function readBody(app: App, file: TFile, logHeading: string): Promise<BodyParts> {
+	const content = await app.vault.cachedRead(file);
+	// Refused here rather than at the save, which is the same refusal a few
+	// minutes later and an edit worse: the form would otherwise open with the
+	// frontmatter sitting in the notes box as if it were prose.
+	if (!hasReadableFrontmatter(content)) {
+		throw new Error("The note's frontmatter could not be found.");
+	}
+	return splitBody(bodyOf(content), logHeading);
+}
+
+/**
+ * Replace the note's prose, keeping its log and its properties.
+ *
+ * `vault.process` reads the file at the moment it writes it, so everything the
+ * prose is put back alongside is read then too — not carried over from
+ * whenever the form was opened. The frontmatter, which is why an edit here
+ * cannot undo a property this plugin wrote a moment ago; and the log, which is
+ * why completing a task while its edit form is open does not lose the entry
+ * that completion just appended.
+ */
+export async function writeBody(
+	app: App,
+	file: TFile,
+	notes: string,
+	logHeading: string,
+): Promise<void> {
+	await app.vault.process(file, (content) => {
+		const { log } = splitBody(bodyOf(content), logHeading);
+		return withBody(content, joinBody({ notes, log }));
 	});
 }
 

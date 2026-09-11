@@ -290,14 +290,60 @@
 
 .task-base-modal .task-base-notes .setting-item-control {
 	width: 100%;
+	display: flex;
+	align-items: flex-start;
+	gap: 0.4em;
 	justify-content: flex-start;
 	padding-left: 0;
 }
 
 .task-base-modal .task-base-notes textarea {
-	width: 100%;
+	/* Flexed rather than 100% wide: the expand button shares this row. */
+	flex: 1 1 auto;
+	min-width: 0;
 	min-height: 10em;
 	/* Drag-resizable, but only taller: widening it would overflow the modal. */
+	resize: vertical;
+	font-family: inherit;
+	line-height: 1.4;
+}
+
+.task-base-modal .task-base-notes .extra-setting-button {
+	margin-top: 0.2em;
+}
+
+/* On a phone the box is replaced by a button carrying the first line of what
+   was written, because a ten-line box last in a form taller than the screen is
+   under the keyboard by the time it has focus. Editing happens in
+   .task-base-notes-modal instead. */
+.task-base-modal .task-base-notes-open {
+	width: 100%;
+	text-align: left;
+	/* One line, whatever was typed: the preview is collapsed in notesPreview,
+	   and this keeps a pathological single word from stretching the row. */
+	display: block;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	height: auto;
+	padding: 0.65em 0.75em;
+	font-family: inherit;
+	font-size: var(--font-ui-small);
+}
+
+.task-base-modal .task-base-notes-open.task-base-notes-empty {
+	color: var(--text-muted);
+}
+
+/* The expanded editor: one field, nothing above it but its own heading, so the
+   keyboard has nothing to hide. Sized in vh rather than rows for the same
+   reason — what matters is how much of the screen is left. */
+.task-base-notes-modal .task-base-notes-input {
+	width: 100%;
+	box-sizing: border-box;
+	min-height: 8em;
+	height: 32vh;
+	max-height: 55vh;
 	resize: vertical;
 	font-family: inherit;
 	line-height: 1.4;

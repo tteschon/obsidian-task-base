@@ -79,7 +79,7 @@ recurring; empty means one-time.
 |---|---|
 | Create task | Form for name, category, priority, due, repeat rule, asset |
 | Complete task | Branches on `frequency` — see below |
-| Edit task | Change due date, priority, category, repeat rule or asset |
+| Edit task | Change the name, due date, priority, category, repeat rule, asset or notes |
 | Edit repeat rule | Opens the RRULE builder on a task |
 | Set asset | Attaches, changes, or clears the asset on an existing task |
 | Create asset note | Creates a `type: asset` note and opens it — no task needed |
@@ -100,6 +100,57 @@ counts it. `Later` is collapsed by default, with its count on the header.
 
 Commands act on the active note when it is a task, and offer a picker when it
 is not.
+
+## Notes
+
+Both create forms end in a **Notes** box that becomes the note's body. On a
+phone that was the one field you could not see while typing into it: the form
+is taller than the screen long before the box is reached, so tapping it leaves
+the box at the bottom of the view with the on-screen keyboard over it.
+
+So on a phone the box is not there. In its place is a one-line button carrying
+the opening of what you wrote, and tapping it opens an editor holding **one
+field and its heading** — the top of the screen, which is the half the keyboard
+leaves alone. Collapsing the box lifts every field above it back into view as
+well, which is the same complaint from the other end.
+
+On a tablet or a desktop the inline box stays, with an expand button beside it
+opening that same editor for anything longer than a line.
+
+The editor writes nothing to the vault: it edits the field, and the form still
+has to be submitted. It commits as you type rather than on **Done**, because
+Escape, a tap outside it, and the Android back gesture all dismiss a modal, and
+losing a paragraph to any of the three is not a trade worth making.
+
+**Edit task** offers the same box on an existing note, filled from the note's
+body. It is given the prose and not the completion log: the log is history —
+one dated line per completion, written over months — and editing a paragraph
+should not be able to take a service record with it. Everything from
+`## Service log` down is carried across untouched, and the field says so when
+there is one. Editing the log itself means opening the note.
+
+The box also never rewrites what it did not touch. Save the form without
+changing the notes and the body is left byte-identical — the same rule the
+properties have always followed here, extended to the prose.
+
+## Renaming a task
+
+**Edit task** carries a **Name** field, which renames the note. It goes through
+Obsidian's own rename, so every link pointing at the task is rewritten with it
+— a task renamed out from under the notes that reference it would be a worse
+outcome than the typo it fixed.
+
+A name another note in the same folder already holds is **refused**, not
+quietly numbered the way a newly created note is. Creating a second "Mow lawn"
+is normal; renaming a task and silently getting "Mow lawn 1" is not what was
+asked for. Correcting only a name's capitalisation is not a collision with
+itself and goes through.
+
+The rename runs last, after the properties and the notes are written, and
+reports on its own. A refused rename therefore costs you the rename — which
+the notice names — and not the edits made alongside it, which are already
+saved. The form stays open on it, since the field to correct is the one in
+front of you.
 
 ## Assets
 

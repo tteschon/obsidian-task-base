@@ -43,6 +43,37 @@ async function resolveFolder(app: App, path: string): Promise<TFolder> {
 	return findFolder(app, path) ?? (await app.vault.createFolder(path));
 }
 
+/**
+ * Rename a note in place, keeping it in the folder it is already in.
+ *
+ * Through `fileManager`, never `vault.rename`: the former rewrites every link
+ * pointing at this note across the vault, and a task renamed out from under
+ * the notes that reference it is a worse outcome than the typo being fixed.
+ *
+ * A name already taken is refused rather than quietly numbered the way a new
+ * note is. Creating a second "Mow lawn" is normal; renaming a task onto an
+ * existing one and getting "Mow lawn 1" is not what was asked for. The clash
+ * is checked case-insensitively, and against every sibling *but this file*, so
+ * that correcting a name's capitalisation is not mistaken for a collision with
+ * itself.
+ */
+export async function renameNote(app: App, file: TFile, name: string): Promise<void> {
+	const fileName = sanitizeFileName(name);
+	if (!fileName) throw new Error("Note name is empty after removing illegal characters.");
+	if (fileName === file.basename) return;
+
+	const parent = file.parent;
+	const wanted = `${fileName}.md`.toLowerCase();
+	const clash = parent?.children.some((f) => f !== file && f.name.toLowerCase() === wanted);
+	if (clash) {
+		const where = parent?.isRoot() ? "the vault root" : parent?.path;
+		throw new Error(`"${fileName}" already exists in ${where}.`);
+	}
+
+	const dir = parent && !parent.isRoot() ? `${parent.path}/` : "";
+	await app.fileManager.renameFile(file, normalizePath(`${dir}${fileName}.md`));
+}
+
 export async function createNote(app: App, spec: NewNote): Promise<TFile> {
 	const fileName = sanitizeFileName(spec.name);
 	if (!fileName) throw new Error("Note name is empty after removing illegal characters.");

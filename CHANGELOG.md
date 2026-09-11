@@ -4,6 +4,45 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Edit task renames the task.** A **Name** field on the edit form, going
+  through Obsidian's own rename so the links pointing at the note are rewritten
+  with it. A name a sibling note already holds is refused rather than quietly
+  numbered the way a new note is, and the rename runs last and reports on its
+  own — a refused one costs the rename, not the edits saved alongside it.
+- **Edit task edits the notes.** The note's body, in the same box the create
+  form offers, and with the same expanded editor behind it.
+
+  It is given the prose and not the completion log. The log is history — one
+  dated line per completion, written over months — and a notes box able to
+  swallow it is not a trade worth making, so everything from `## Service log`
+  down is carried across untouched and the field says so when there is one.
+  The log is re-read at the moment of writing rather than put back as it was
+  when the form opened, so completing a task while its edit form is open does
+  not lose the entry that completion just appended.
+
+  Saving without touching the notes leaves the body byte-identical, the rule
+  the properties on this form have always followed.
+
+### Changed
+
+- **The notes field can be edited in a window of its own**, in both Create task
+  and Create asset. On a phone the inline box is replaced outright by a
+  one-line button opening that editor: the notes box is the last field of a
+  form already taller than the screen, so tapping it put the box under the
+  on-screen keyboard and you typed into a field you could not see. An editor
+  holding one field puts it at the top of the screen instead, and collapsing
+  the box lifts the fields above it back into view too. On a tablet or a
+  desktop the box stays, with an expand button beside it.
+
+  The editor commits as you type rather than on **Done** — Escape, a tap
+  outside, and the Android back gesture all dismiss a modal, and none of them
+  should cost a paragraph. Nothing reaches the vault until the form itself is
+  submitted, as before.
+
 ## [0.4.0] — 2026-09-03
 
 ### Added

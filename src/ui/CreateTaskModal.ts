@@ -7,6 +7,7 @@ import { formatAssetLink } from "../model/assetLink";
 import type { AssetRepository } from "../model/assetRepository";
 import { addAssetField } from "./AssetField";
 import { FrequencyModal } from "./FrequencyModal";
+import { addNotesField } from "./NotesField";
 
 /** Capture a task: name, category, priority, due date, recurrence, asset. */
 export class CreateTaskModal extends Modal {
@@ -95,17 +96,11 @@ export class CreateTaskModal extends Modal {
 			onChange: (name) => (this.assetName = name),
 		});
 
-		// Stacked rather than squeezed into a Setting's narrow control column —
-		// see the .task-base-notes rules in styles.css.
-		new Setting(contentEl)
-			.setName("Notes")
-			.setClass("task-base-notes")
-			.addTextArea((t) => {
-				t.setPlaceholder("Anything worth remembering in the note body.").onChange(
-					(v) => (this.body = v),
-				);
-				t.inputEl.rows = 8;
-			});
+		addNotesField(contentEl, {
+			app: this.app,
+			placeholder: "Anything worth remembering in the note body.",
+			onChange: (body) => (this.body = body),
+		});
 
 		const buttons = contentEl.createDiv({ cls: "task-base-buttons" });
 		buttons.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());

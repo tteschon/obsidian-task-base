@@ -78,6 +78,11 @@ export function normalizeEmptyKeysIn(content: string, keys: string[]): string {
 	return head.replace(pattern, "$1:") + tail;
 }
 
+/** `## <heading>` on a line of its own, wherever it sits in a body. */
+function logHeadingRe(heading: string): RegExp {
+	return new RegExp(`^##\\s+${heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "im");
+}
+
 /** Append a dated line under `## <heading>`, creating the heading if absent. */
 export function appendLogLine(
 	content: string,
@@ -86,8 +91,7 @@ export function appendLogLine(
 	when: ISODate,
 ): string {
 	const entry = `- ${when} - ${detail.trim()}`;
-	const headingRe = new RegExp(`^##\\s+${heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "im");
-	const match = headingRe.exec(content);
+	const match = logHeadingRe(heading).exec(content);
 	if (!match) {
 		const spacer = content.endsWith("\n") ? "" : "\n";
 		return `${content}${spacer}\n## ${heading}\n\n${entry}\n`;
@@ -95,6 +99,103 @@ export function appendLogLine(
 	const insertAt = match.index + match[0].length;
 	const rest = content.slice(insertAt).replace(/^\n+/, "");
 	return `${content.slice(0, insertAt)}\n\n${entry}\n${rest}`;
+}
+
+/**
+ * Where a note's body begins — past the closing frontmatter delimiter, or
+ * `null` when no frontmatter was found to get past.
+ *
+ * The same `\n---` scan `normalizeEmptyKeysIn` uses, for the same reason: it
+ * is the one place a mistake rewrites somebody's note instead of their
+ * properties.
+ *
+ * `null` and 0 are kept apart deliberately, because the callers want opposite
+ * things from "no frontmatter here". Reading a body, that is a note which is
+ * all body. Writing one, it is a note whose properties this scan cannot see —
+ * a byte-order mark ahead of the `---`, or an opening delimiter whose closing
+ * one has not been written yet — and treating it as all body would put the
+ * prose where the frontmatter was.
+ */
+function bodyStart(content: string): number | null {
+	if (!content.startsWith("---")) return null;
+	const end = content.indexOf("\n---", 3);
+	if (end === -1) return null;
+	const lineEnd = content.indexOf("\n", end + 1);
+	return lineEnd === -1 ? content.length : lineEnd + 1;
+}
+
+/**
+ * Whether the scan above can find this note's properties.
+ *
+ * A task note always has frontmatter — `readTask` will not hand anything
+ * without `type: task` in it to a caller — so a false here does not mean a
+ * note of pure prose. It means the scan is blind to properties that are really
+ * there, and every body operation below it would be working on the wrong
+ * bytes.
+ */
+export function hasReadableFrontmatter(content: string): boolean {
+	return bodyStart(content) !== null;
+}
+
+/** Everything below the frontmatter, or the whole note when it carries none. */
+export function bodyOf(content: string): string {
+	return content.slice(bodyStart(content) ?? 0);
+}
+
+/**
+ * `content` with its body replaced and its frontmatter left exactly as it was.
+ *
+ * The properties are not reparsed or reserialised on the way through — an edit
+ * to the prose must not be able to reformat a date, requote a link, or turn a
+ * bare `frequency:` into `frequency: ''` and break the base's filters.
+ *
+ * Content whose frontmatter this cannot find is refused rather than guessed
+ * at. The guess would be that the note has none and is body all the way up,
+ * which writes the prose over the properties — the one outcome this function
+ * exists to make impossible. Refusing costs an edit that can be retyped; the
+ * guess costs a note's properties, which cannot.
+ */
+export function withBody(content: string, body: string): string {
+	const start = bodyStart(content);
+	if (start === null) {
+		throw new Error("The note's frontmatter could not be found, so the body was left alone.");
+	}
+	const head = content.slice(0, start);
+	const text = body.trim();
+	return text ? `${head}\n${text}\n` : head;
+}
+
+export interface BodyParts {
+	/** The prose above the completion log. */
+	notes: string;
+	/** The log heading and everything below it, or "" when there is no log. */
+	log: string;
+}
+
+/**
+ * Split a body at its completion log.
+ *
+ * The log is history — one dated line per completion, written over months —
+ * and the edit form's notes box must not be able to swallow it. Editing prose
+ * and losing a service record to it is not a trade anyone would accept, so the
+ * box is given the prose and the log is carried across untouched.
+ *
+ * A log written under a different heading than the setting now names reads as
+ * prose and lands in the box. That is visible rather than destructive: it is
+ * shown, and saving keeps it.
+ */
+export function splitBody(body: string, heading: string): BodyParts {
+	const match = logHeadingRe(heading).exec(body);
+	if (!match) return { notes: body.trim(), log: "" };
+	return { notes: body.slice(0, match.index).trim(), log: body.slice(match.index).trim() };
+}
+
+/** The inverse of `splitBody`, with one blank line between the two. */
+export function joinBody(parts: BodyParts): string {
+	const notes = parts.notes.trim();
+	const log = parts.log.trim();
+	if (!log) return notes;
+	return notes ? `${notes}\n\n${log}` : log;
 }
 
 export interface AssetNoteFields {
