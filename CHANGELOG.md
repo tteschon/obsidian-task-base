@@ -4,6 +4,26 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Reschedule overdue tasks.** A button on the task pane's Overdue heading,
+  and a command, move every overdue due date forward at once: a repeating task
+  to the next date in its own schedule, a one-time task to today. Only `due`
+  changes — nothing is marked done, and `last done` and the service log are
+  left alone.
+
+  "The next date in its own schedule" steps the task's due dates forward from
+  the one it holds, rather than treating today as a completion. Completing a
+  Sunday chore on a Tuesday spends that week and gives the following Sunday;
+  rescheduling it gives this Sunday, and a fortnightly task keeps its
+  fortnight. A rule that cannot be read, or whose schedule has ended, is left
+  as it is.
+
+  Nothing is written until a dialog has listed every task with its old and new
+  date, and the tasks it will leave alone with the reason.
+
 ## [0.5.0] — 2026-09-11
 
 ### Added

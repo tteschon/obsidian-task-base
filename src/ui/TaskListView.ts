@@ -179,6 +179,12 @@ export class TaskListView extends ItemView {
 				const header = sectionEl.createDiv({ cls: "task-base-section-header" });
 				header.createSpan({ text: section.title });
 				header.createSpan({ cls: "task-base-count", text: String(tasks.length) });
+				// Beside the tasks it acts on, and only while there are any.
+				if (section.key === "overdue" && tasks.length) {
+					this.iconButton(header, "calendar-clock", "Reschedule overdue tasks", () =>
+						this.plugin.openRescheduleOverdueModal(),
+					);
+				}
 			}
 
 			// The count on a folded header is the whole point — it says how much

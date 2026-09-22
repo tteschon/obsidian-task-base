@@ -13,6 +13,7 @@ import { CreateTaskModal } from "./ui/CreateTaskModal";
 import { EditTaskModal } from "./ui/EditTaskModal";
 import { CompleteTaskModal } from "./ui/CompleteTaskModal";
 import { FrequencyModal } from "./ui/FrequencyModal";
+import { RescheduleOverdueModal } from "./ui/RescheduleOverdueModal";
 import { SetAssetModal } from "./ui/SetAssetModal";
 import { TaskSuggestModal } from "./ui/TaskSuggestModal";
 import { TASK_VIEW_TYPE, TaskListView } from "./ui/TaskListView";
@@ -112,6 +113,12 @@ export default class TaskBasePlugin extends Plugin {
 					new Notice(`${task.name} — due ${due} (from ${anchor})`);
 					this.refreshViews();
 				}),
+		});
+
+		this.addCommand({
+			id: "reschedule-overdue",
+			name: "Reschedule overdue tasks",
+			callback: () => this.openRescheduleOverdueModal(),
 		});
 
 		this.addCommand({
@@ -248,6 +255,22 @@ export default class TaskBasePlugin extends Plugin {
 			this.refreshViews();
 			void this.app.workspace.getLeaf(false).openFile(file);
 		}).open();
+	}
+
+	/**
+	 * Shared by the "Reschedule overdue tasks" command and the button on the
+	 * task pane's Overdue heading.
+	 *
+	 * The tasks are the pane's own Overdue bucket, so the list the modal offers
+	 * to move is the list that section shows.
+	 */
+	openRescheduleOverdueModal(): void {
+		const overdue = this.repository.buckets().overdue;
+		if (!overdue.length) {
+			new Notice("Nothing is overdue.");
+			return;
+		}
+		new RescheduleOverdueModal(this.app, overdue, () => this.refreshViews()).open();
 	}
 
 	/**

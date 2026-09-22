@@ -84,6 +84,7 @@ recurring; empty means one-time.
 | Set asset | Attaches, changes, or clears the asset on an existing task |
 | Create asset note | Creates a `type: asset` note and opens it — no task needed |
 | Recompute due date from repeat rule | Rolls `due` forward from `last done` |
+| Reschedule overdue tasks | Moves every overdue due date forward, after a preview — see below |
 | Open task base | Opens the base file, creating one if there isn't one |
 | Open task list | The sidebar view |
 
@@ -92,6 +93,8 @@ that opens the base file, **creating one if you don't have a base yet**. Its
 filters are generated from the **Excluded folders** setting, so a base made this
 way agrees with the pane by construction. It sticks to the top so the primary action stays
 reachable once the list scrolls. Right-click any row for Edit / Complete / Open.
+While anything is overdue, the **Overdue** heading carries a button that
+reschedules the lot — see [Rescheduling overdue tasks](#rescheduling-overdue-tasks).
 
 Its sections — Overdue, Today, This week, Needs attention, Later — **partition
 the open set**: `Later` is defined as everything not caught by the others, not
@@ -238,6 +241,46 @@ Case 3 is why this is not a plain `rrule.after(today)`. Anchoring at the
 completion date makes `INTERVAL` step from there, so an oil change on
 2026-06-19 under `FREQ=MONTHLY;INTERVAL=6;BYMONTHDAY=-1` would roll to
 2026-06-30 — eleven days out instead of six months.
+
+## Rescheduling overdue tasks
+
+**Reschedule overdue tasks** — a command, and a button on the pane's Overdue
+heading while anything is overdue — moves every overdue due date forward at
+once. It is not completing: **only `due` changes**. `done`, `last done` and the
+service log are left alone, because nothing was done.
+
+- **Repeating** — `due` moves to the first date in the task's own schedule on
+  or after today.
+- **One-time** — `due` moves to today.
+- **Unreadable rule, or a schedule that has ended** (`COUNT`, `UNTIL`) — left
+  as it is. Moving an unreadable rule to today would treat it as one-time, the
+  same guess completing refuses to make.
+
+**Nothing is written until you have seen where each task lands.** The dates it
+replaces cannot be read back from the notes afterwards, so a dialog lists every
+task with its old and new date first, and the ones it will leave alone with the
+reason. Each task is decided again from its note at the moment of writing, so
+one completed while the list was open stays as it was.
+
+"The first date in its own schedule" steps the task's chain of due dates — each
+the date completing it on time would have produced — forward from the date it
+holds, until it reaches today. That is not the same as completing it today,
+which spends the current period and restarts an `INTERVAL` from this week:
+
+| Rule | Due | Today | Rescheduled to | Completing today gives |
+|---|---|---|---|---|
+| `FREQ=WEEKLY;BYDAY=SU` | Sun 2026-09-13 | Tue 2026-09-22 | 2026-09-27 | 2026-10-04 |
+| `FREQ=MONTHLY;BYMONTHDAY=-1` | 2026-08-31 | Tue 2026-09-22 | 2026-09-30 | 2026-10-31 |
+| `FREQ=WEEKLY;INTERVAL=2;BYDAY=MO` | Mon 2026-09-14 | Tue 2026-09-22 | 2026-09-28 | 2026-10-05 |
+| `FREQ=WEEKLY;BYDAY=TU` | Tue 2026-09-15 | Tue 2026-09-22 | 2026-09-22 | 2026-09-29 |
+
+An occurrence that falls today makes the task due today rather than skipping
+past it. **Recompute due date from repeat rule** is different again: it works
+from `last done`, as though the task had been completed then.
+
+Only open tasks due before today are touched. A recurring task stuck at
+`done: true` is not overdue work — the pane goes on reporting it, and
+rescheduling leaves it alone.
 
 ## Things this plugin will not do
 
@@ -390,6 +433,7 @@ src/
   model/frontmatter.ts       pure text: note rendering, YAML normalisation
   model/assetLink.ts         pure text: asset wikilink <-> bare name
   model/completion.ts        pure: the branch completing a task takes
+  model/reschedule.ts        pure: where rescheduling moves an overdue task
   model/task.ts              the field contract, read + write
   model/asset.ts             write an asset note
   model/note.ts              placing a new note: folder, casing, name collisions
@@ -417,7 +461,7 @@ would rewrite someone's note body.
 npm install
 echo "$HOME/path/to/YourVault/.obsidian/plugins/task-base" > .vault-plugin-dir
 npm run dev     # watch build, writes straight into the vault plugin folder
-npm test        # node:test over recurrence, completion, frontmatter, asset links, settings
+npm test        # node:test over recurrence, completion, rescheduling, frontmatter, asset links, settings
 npm run lint    # eslint
 npm run build   # typecheck + minified build to the repo root, for release
 ```
