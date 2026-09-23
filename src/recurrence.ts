@@ -190,6 +190,36 @@ export function nextDue(text: unknown, completedOn: ISODate): ISODate | null {
 	return next ? toISO(next) : null;
 }
 
+/**
+ * The first date on or after `today` in the schedule an overdue `due` sits on.
+ *
+ * Steps the task's own chain of due dates — each one `nextDue` from the one
+ * before, the date completing it on time would have produced — until the
+ * chain reaches today. That is not `nextDue(rule, today)`, which treats today
+ * as a completion and so spends the current period: a Sunday chore overdue
+ * since last week would skip this Sunday for the next, and a month-end one
+ * would skip this month's end. Stepping from the due date also keeps an
+ * INTERVAL rule in phase — a fortnightly chore stays on its own fortnight
+ * rather than restarting from this week.
+ *
+ * An occurrence falling today is returned as today, and a due date already on
+ * or after today is returned as it is. Null when the rule is unreadable,
+ * either date is not a date, or the schedule ended — COUNT or UNTIL — before
+ * reaching today. The cost is one step per missed occurrence.
+ */
+export function nextDueOnOrAfter(text: unknown, due: ISODate, today: ISODate): ISODate | null {
+	if (!parseFrequency(text) || !parseISO(due) || !parseISO(today)) return null;
+	let cursor = due;
+	while (cursor < today) {
+		const next = nextDue(text, cursor);
+		// nextDue only moves forward, which is what ends this loop. Checking
+		// makes that a guarantee here rather than a property of the policy.
+		if (!next || next <= cursor) return null;
+		cursor = next;
+	}
+	return cursor;
+}
+
 /** The next `count` occurrences on or after `fromISO`, for preview UI. */
 export function upcoming(text: unknown, fromISO: ISODate, count = 3): ISODate[] {
 	const opts = parseFrequency(text);

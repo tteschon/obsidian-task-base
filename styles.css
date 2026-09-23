@@ -114,6 +114,16 @@
 	color: var(--text-error);
 }
 
+/* A section's own action — the Overdue heading's reschedule button — at the
+   far end of the heading. Sized down from the toolbar's buttons so the heading
+   carrying it is no taller than the ones that do not. */
+.task-base-view .task-base-section-header .task-base-icon-button {
+	margin-left: auto;
+	align-self: center;
+	height: auto;
+	padding: 0.15em;
+}
+
 .task-base-view .task-base-row {
 	display: grid;
 	grid-template-columns: auto 1fr auto;
@@ -251,6 +261,22 @@
 	justify-content: flex-end;
 	gap: 0.5em;
 	margin-top: 1em;
+}
+
+/* The reschedule list can run to every overdue task in the vault, so it
+   scrolls inside the modal rather than pushing the buttons off the screen. */
+.task-base-modal .task-base-reschedule-list {
+	max-height: 40vh;
+	overflow-y: auto;
+}
+
+.task-base-modal .task-base-reschedule-row + .task-base-reschedule-row {
+	margin-top: 0.5em;
+}
+
+.task-base-modal .task-base-reschedule-heading {
+	color: var(--text-muted);
+	margin-bottom: 0.4em;
 }
 
 .task-base-modal .task-base-hint:not(:empty) {

@@ -6,6 +6,7 @@ import {
 	frequencyState,
 	isRecurring,
 	nextDue,
+	nextDueOnOrAfter,
 	parseFrequency,
 	specFromFrequency,
 	upcoming,
@@ -83,6 +84,60 @@ test("an unreadable rule is its own state, never mistaken for one-time", () => {
 test("a bad completion date yields null", () => {
 	for (const bad of ["2026-13-01", "2026-02-30", "31/08/2026", "today", ""]) {
 		assert.equal(nextDue("FREQ=WEEKLY;BYDAY=MO", bad), null, bad);
+	}
+});
+
+/**
+ * Catching an overdue due date up to today along its own schedule, with today
+ * a Tuesday, 2026-09-22. The first two are why this is not `nextDue(rule,
+ * today)`: that treats today as a completion and spends the current period,
+ * giving 2026-10-04 and 2026-10-31.
+ */
+const TODAY = "2026-09-22";
+const catchUps: Array<[rule: string, due: string, expected: string, why: string]> = [
+	["FREQ=WEEKLY;BYDAY=SU", "2026-09-13", "2026-09-27", "this Sunday, not next week's"],
+	["FREQ=MONTHLY;BYMONTHDAY=-1", "2026-08-31", "2026-09-30", "this month's end, not next month's"],
+	["FREQ=WEEKLY;INTERVAL=2;BYDAY=MO", "2026-09-14", "2026-09-28", "fortnightly keeps its phase"],
+	["FREQ=WEEKLY;INTERVAL=2;BYDAY=MO", "2026-09-07", "2026-10-05", "the other fortnight keeps its own"],
+	["FREQ=WEEKLY;BYDAY=MO,TH", "2026-09-10", "2026-09-24", "two a week takes the next of the two"],
+	["FREQ=WEEKLY;BYDAY=TU", "2026-09-15", "2026-09-22", "an occurrence today is due today"],
+	["FREQ=MONTHLY;INTERVAL=6;BYMONTHDAY=-1", "2026-06-30", "2026-12-31", "live: Oil Change"],
+	["FREQ=YEARLY", "2025-06-19", "2027-06-19", "a yearly task keeps its anniversary"],
+	["FREQ=DAILY", "2026-09-01", "2026-09-22", "daily lands on today"],
+	["FREQ=WEEKLY;BYDAY=MO", "2026-09-09", "2026-09-28", "a due date off the rule lands back on it"],
+];
+
+test("nextDueOnOrAfter catches an overdue date up along its own schedule", () => {
+	for (const [rule, due, expected, why] of catchUps) {
+		assert.equal(nextDueOnOrAfter(rule, due, TODAY), expected, `${rule} due ${due} — ${why}`);
+	}
+});
+
+test("nextDueOnOrAfter never lands before today", () => {
+	// The rules in `cases` too, each taking its completion date as the due date.
+	for (const [rule, due] of [...catchUps, ...cases]) {
+		const got = nextDueOnOrAfter(rule, due, TODAY);
+		assert.ok(got !== null && got >= TODAY, `${rule} due ${due} returned ${got}`);
+	}
+});
+
+test("a due date already on or after today is left where it is", () => {
+	assert.equal(nextDueOnOrAfter("FREQ=WEEKLY;BYDAY=TU", TODAY, TODAY), TODAY);
+	assert.equal(nextDueOnOrAfter("FREQ=WEEKLY;BYDAY=MO", "2026-09-30", TODAY), "2026-09-30");
+});
+
+test("a schedule that ends before today yields null", () => {
+	assert.equal(nextDueOnOrAfter("FREQ=WEEKLY;BYDAY=MO;COUNT=1", "2026-09-14", TODAY), null);
+	assert.equal(nextDueOnOrAfter("FREQ=WEEKLY;BYDAY=MO;UNTIL=20260915", "2026-09-14", TODAY), null);
+});
+
+test("nextDueOnOrAfter yields null for a bad rule or a bad date", () => {
+	for (const bad of [null, "", "not a rule", "FREQ=FORTNIGHTLY"]) {
+		assert.equal(nextDueOnOrAfter(bad, "2026-09-14", TODAY), null, String(bad));
+	}
+	for (const bad of ["2026-02-30", "14/09/2026", "today", ""]) {
+		assert.equal(nextDueOnOrAfter("FREQ=WEEKLY;BYDAY=MO", bad, TODAY), null, `due ${bad}`);
+		assert.equal(nextDueOnOrAfter("FREQ=WEEKLY;BYDAY=MO", "2026-09-14", bad), null, `today ${bad}`);
 	}
 });
 
